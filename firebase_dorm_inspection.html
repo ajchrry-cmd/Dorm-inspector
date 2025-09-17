@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dorm Inspection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 8px;
+            color: #e0e0e0;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #1e1e2e;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: #e2e8f0;
+            padding: 16px;
+            text-align: center;
+            border-bottom: 2px solid #4a5568;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            color: #90cdf4;
+        }
+
+        .header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            color: #cbd5e0;
+        }
+
+        .connection-status {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f56565;
+        }
+
+        .status-dot.connected {
+            background: #68d391;
+        }
+
+        .main-content {
+            padding: 16px;
+            background: #1a1a2e;
+        }
+
+        .nav-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .nav-btn {
+            padding: 14px 8px;
+            background: linear-gradient(145deg, #4a5568, #2d3748);
+            color: #e2e8f0;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #4a5568;
+            touch-action: manipulation;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(145deg, #3182ce, #2c5282);
+            box-shadow: 0 4px 15px rgba(49, 130, 206, 0.5);
+            color: #e2e8f0;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .room-mode-toggle {
+            background: linear-gradient(135deg, #2d3748, #1a202c);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #3182ce;
+            box-shadow: 0 2px 8px rgba(49, 130, 206, 0.2);
+        }
+
+        .toggle-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toggle-label {
+            font-weight: 700;
+            color: #90cdf4;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .radio-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .radio-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 12px 8px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            background: rgba(74, 85, 104, 0.3);
+            border: 2px solid #4a5568;
+            touch-action: manipulation;
+            min-height: 48px;
+        }
+
+        .radio-option:active {
+            transform: scale(0.98);
+        }
+
+        .radio-option:has(input:checked) {
+            background: rgba(49, 130, 206, 0.3);
+            border-color: #3182ce;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #3182ce;
+        }
+
+        .radio-option span {
+            font-weight: 600;
+            color: #cbd5e0;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #4a5568;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #2d3748, #1a202c);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            font-weight: 600;
+            color: #e2e8f0;
+            min-height: 48px;
+            touch-action: manipulation;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: #a0aec0;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.3);
+            background: linear-gradient(135deg, #1a202c, #2d3748);
+        }
+
+        select option {
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+
+        .demerits-section {
+            background: linear-gradient(135deg, #2d3748, #1a202c);
+            padding: 16px;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+            border: 1px solid #4a5568;
+        }
+
+        .demerits-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .demerit-item {
+            background: linear-gradient(135deg, #4a5568, #2d3748);
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid #3182ce;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+            touch-action: manipulation;
+        }
+
+        .demerit-item:active {
+            transform: scale(0.98);
+        }
+
+        .demerit-item.checked {
+            border-color: #f56565;
+            background: linear-gradient(135deg, #742a2a, #553c3c);
+            padding-left: 50px;
+            padding-right: 40px;
+            box-shadow: 0 6px 15px rgba(245, 101, 101, 0.3);
+        }
+
+        .demerit-item.checked::before {
+            content: '✓';
+            position: absolute;
+            left: 16px;
+            font-size: 20px;
+            color: #f56565;
+            font-weight: bold;
+        }
+
+        .demerit-item.checked::after {
+            content: '⚠️';
+            position: absolute;
+            right: 12px;
+            font-size: 16px;
+        }
+
+        .demerit-item.auto-failure {
+            border-color: #e53e3e;
+            background: linear-gradient(135deg, #742a2a, #553c3c);
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+        }
+
+        .demerit-text {
+            font-weight: 600;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            line-height: 1.3;
+            user-select: none;
+            flex: 1;
+        }
+
+        .demerit-item.checked .demerit-text {
+            color: #fed7d7;
+            font-weight: 700;
+        }
+
+        .demerit-item.auto-failure .demerit-text {
+            color: #fed7d7;
+            font-weight: 700;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #3182ce, #2c5282);
+            color: #e2e8f0;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(49, 130, 206, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            min-height: 56px;
+            touch-action: manipulation;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .score-display {
+            text-align: center;
+            margin: 20px 0;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            border: 2px solid;
+        }
+
+        .score-pass {
+            background: linear-gradient(145deg, #38a169, #2f855a);
+            color: #f0fff4;
+            border-color: #68d391;
+        }
+
+        .score-fail {
+            background: linear-gradient(145deg, #e53e3e, #c53030);
+            color: #fed7d7;
+            border-color: #f56565;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #4a5568;
+            border-top: 3px solid #3182ce;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sync-indicator {
+            background: rgba(49, 130, 206, 0.1);
+            border: 1px solid #3182ce;
+            color: #90cdf4;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .error-message {
+            background: rgba(229, 62, 62, 0.1);
+            border: 1px solid #e53e3e;
+            color: #fed7d7;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        /* All other existing styles remain the same */
+        .inspection-card {
+            background: linear-gradient(135deg, #2d3748, #1a202c);
+            border: 2px solid #4a5568;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            position: relative;
+            padding-top: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+
+        .inspection-card:active {
+            transform: scale(0.99);
+        }
+
+        .inspection-card.pass {
+            border-color: #38a169;
+            background: linear-gradient(135deg, #1a2f23, #22543d);
+        }
+
+        .inspection-card.fail {
+            border-color: #e53e3e;
+            background: linear-gradient(135deg, #2d1b1b, #3c1a1a);
+        }
+
+        .inspection-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+        }
+
+        .inspection-card p {
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            color: #cbd5e0;
+            line-height: 1.4;
+        }
+
+        .card-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .edit-btn, .delete-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.7rem;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-height: 32px;
+            touch-action: manipulation;
+        }
+
+        .edit-btn:active, .delete-btn:active {
+            transform: scale(0.95);
+        }
+
+        .edit-btn {
+            background: linear-gradient(145deg, #ed8936, #dd6b20);
+            color: #fffaf0;
+            box-shadow: 0 3px 10px rgba(237, 137, 54, 0.4);
+        }
+
+        .delete-btn {
+            background: linear-gradient(145deg, #e53e3e, #c53030);
+            color: #fed7d7;
+            box-shadow: 0 3px 10px rgba(229, 62, 62, 0.4);
+        }
+
+        .delete-all-btn {
+            background: linear-gradient(145deg, #e53e3e, #c53030);
+            color: #fed7d7;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(229, 62, 62, 0.4);
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.8rem;
+            min-height: 48px;
+            touch-action: manipulation;
+        }
+
+        .delete-all-btn:active {
+            transform: scale(0.98);
+        }
+
+        .export-btn {
+            padding: 14px 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+            min-height: 48px;
+            touch-action: manipulation;
+        }
+
+        .export-btn:active {
+            transform: scale(0.98);
+        }
+
+        .print-btn {
+            background: linear-gradient(145deg, #805ad5, #6b46c1);
+            color: #e9d8fd;
+            box-shadow: 0 4px 15px rgba(128, 90, 213, 0.3);
+        }
+
+        .csv-btn {
+            background: linear-gradient(145deg, #38a169, #2f855a);
+            color: #f0fff4;
+            box-shadow: 0 4px 15px rgba(56, 161, 105, 0.3);
+        }
+
+        .excel-btn {
+            background: linear-gradient(145deg, #3182ce, #2c5282);
+            color: #e2e8f0;
+            box-shadow: 0 4px 15px rgba(49, 130, 206, 0.3);
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: #e2e8f0;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: #e2e8f0;
+        }
+
+        h4 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: #e2e8f0;
+        }
+
+        p {
+            color: #cbd5e0;
+        }
+
+        hr {
+            border-color: #4a5568 !important;
+            margin: 20px 0;
+        }
+
+        .schedule-room-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(145deg, #2d3748, #1a202c);
+            border: 2px solid #3182ce;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .schedule-room-number {
+            font-weight: 700;
+            color: #90cdf4;
+            font-size: 1rem;
+        }
+
+        .remove-room-btn {
+            background: #e53e3e;
+            color: #fed7d7;
+            border: none;
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .remove-room-btn:active {
+            transform: scale(0.95);
+        }
+
+        .add-room-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .add-room-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .add-room-controls select {
+            flex: 1;
+        }
+
+        .add-room-btn {
+            background: linear-gradient(145deg, #38a169, #2f855a);
+            color: #f0fff4;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(56, 161, 105, 0.3);
+            white-space: nowrap;
+            font-size: 0.85rem;
+            min-height: 48px;
+            touch-action: manipulation;
+        }
+
+        .add-room-btn:active {
+            transform: scale(0.98);
+        }
+
+        .schedule-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .schedule-actions button {
+            min-height: 48px;
+            font-size: 0.9rem;
+            border-radius: 12px;
+            padding: 16px 20px;
+            touch-action: manipulation;
+        }
+
+        .schedule-actions button:active {
+            transform: scale(0.98);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #2d3748, #1a202c);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 2px solid #4a5568;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #e2e8f0;
+        }
+
+        .stat-label {
+            color: #cbd5e0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .stat-card.total { border-color: #4a5568; }
+        .stat-card.pass { border-color: #38a169; }
+        .stat-card.pass .stat-number { color: #68d391; }
+        .stat-card.fail { border-color: #e53e3e; }
+        .stat-card.fail .stat-number { color: #f56565; }
+        .stat-card.rate { border-color: #3182ce; }
+        .stat-card.rate .stat-number { color: #90cdf4; }
+
+        .export-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .sticky-actions {
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e 95%, transparent);
+            padding: 16px 0 8px 0;
+            margin-top: 20px;
+        }
+
+        .violation-list {
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        @media (pointer: coarse) {
+            .nav-btn {
+                min-height: 52px;
+            }
+            
+            .btn-primary {
+                min-height: 60px;
+            }
+            
+            .demerit-item {
+                min-height: 60px;
+            }
+            
+            input, select, textarea {
+                min-height: 52px;
+            }
+        }
+
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            .header {
+                padding: 12px;
+            }
+            
+            .header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .main-content {
+                padding: 12px;
+            }
+            
+            .nav-buttons {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 4px;
+                margin-bottom: 16px;
+            }
+            
+            .nav-btn {
+                font-size: 0.65rem;
+                padding: 10px 4px;
+                min-height: 44px;
+            }
+        }
+
+        @media screen and (max-width: 375px) {
+            body {
+                padding: 4px;
+                font-size: 15px;
+            }
+            
+            .nav-btn {
+                font-size: 0.7rem;
+                padding: 12px 6px;
+            }
+            
+            .radio-option span {
+                font-size: 0.75rem;
+            }
+            
+            .demerit-text {
+                font-size: 0.85rem;
+            }
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 3px solid #90cdf4;
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="connection-status" id="connection-status">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-text">Connecting...</span>
+            </div>
+            <h1>🏢 Dorm Inspection System</h1>
+            <p>Weekly Room Inspection Management</p>
+        </div>
+        
+        <div class="main-content">
+            <div id="error-container"></div>
+            
+            <div class="nav-buttons">
+                <button class="nav-btn active" onclick="showTab('new')">New Inspection</button>
+                <button class="nav-btn" onclick="showTab('schedule')">Weekly Schedule</button>
+                <button class="nav-btn" onclick="showTab('view')">View Inspections</button>
+                <button class="nav-btn" onclick="showTab('reports')">Generate Report</button>
+            </div>
+
+            <!-- New Inspection Section -->
+            <div id="new-section" class="section active">
+                <h2 id="form-title">📋 New Room Inspection</h2>
+                
+                <div class="room-mode-toggle">
+                    <div class="toggle-content">
+                        <span class="toggle-label">Room Selection Mode:</span>
+                        <div class="radio-options">
+                            <label class="radio-option">
+                                <input type="radio" name="roomMode" value="scheduled" checked onchange="toggleRoomMode()">
+                                <span>📅 Scheduled Only</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="roomMode" value="all" onchange="toggleRoomMode()">
+                                <span>🏢 All Rooms</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="roomNumber">Room Number *</label>
+                        <select id="roomNumber" required>
+                            <option value="">Select Room Number</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="inspectorName">Inspector Name (optional)</label>
+                        <input type="text" id="inspectorName" placeholder="Enter inspector name">
+                    </div>
+                </div>
+
+                <div class="demerits-section">
+                    <h3>Inspection Checklist</h3>
+                    <p style="margin-bottom: 20px; color: #a0aec0; font-size: 0.85rem; line-height: 1.4;">Tap violations found below. Regular violations = 1 point each. Auto-failure violations = 4 points each. 4+ points = FAILED inspection</p>
+                    
+                    <h4 style="margin-bottom: 15px; color: #e2e8f0; font-size: 0.95rem;">Regular Demerits (1 point each)</h4>
+                    <div class="demerits-grid" id="demerits-container">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                    
+                    <hr style="margin: 25px 0; border: none; border-top: 2px solid #4a5568;">
+                    
+                    <h4 style="margin-bottom: 15px; color: #fed7d7; font-weight: bold; font-size: 0.95rem;">⚠️ Auto Failure Demerits (4 points each)</h4>
+                    <div class="demerits-grid" id="auto-failure-container">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="score-display score-pass" id="score-display">
+                    Score: 0 points - PASSED
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Additional Notes</label>
+                    <textarea id="notes" rows="3" placeholder="Any additional observations or comments..."></textarea>
+                </div>
+
+                <div class="sticky-actions">
+                    <button type="button" class="btn-primary" onclick="saveInspection()" id="save-btn">Save Inspection</button>
+                    <button type="button" class="btn-primary" id="cancel-btn" style="display: none; margin-top: 12px; background: linear-gradient(145deg, #e53e3e, #c53030);" onclick="cancelEdit()">Cancel Edit</button>
+                </div>
+            </div>
+
+            <!-- Weekly Schedule Section -->
+            <div id="schedule-section" class="section">
+                <h2>📅 Weekly Inspection Schedule</h2>
+                
+                <div class="demerits-section">
+                    <h3 style="margin-bottom: 20px; color: #e2e8f0; font-size: 1.1rem;">Set Rooms for This Week's Inspections</h3>
+                    
+                    <div class="add-room-section">
+                        <label for="roomInput">Add Room Numbers</label>
+                        <div class="add-room-controls">
+                            <select id="roomInput">
+                                <option value="">Select Room to Add</option>
+                            </select>
+                            <button type="button" class="add-room-btn" onclick="addRoomToSchedule()">➕ Add</button>
+                        </div>
+                    </div>
+
+                    <div style="margin: 25px 0;">
+                        <h4 style="margin-bottom: 12px; color: #e2e8f0;">Scheduled Rooms for This Week:</h4>
+                        <div id="scheduled-rooms" style="min-height: 60px; background: linear-gradient(135deg, #4a5568, #2d3748); border: 2px solid #3182ce; border-radius: 12px; padding: 16px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);">
+                            <p style="color: #a0aec0; text-align: center; margin: 15px 0;">No rooms scheduled yet. Add rooms above.</p>
+                        </div>
+                    </div>
+
+                    <div class="schedule-actions">
+                        <button type="button" onclick="clearAllScheduledRooms()" style="background: linear-gradient(145deg, #e53e3e, #c53030); color: #fed7d7; border: none; font-weight: 600; cursor: pointer; box-shadow: 0 3px 10px rgba(229, 62, 62, 0.3);">🗑️ Clear All Rooms</button>
+                        <button type="button" onclick="saveSchedule()" style="background: linear-gradient(145deg, #3182ce, #2c5282); color: #e2e8f0; border: none; font-weight: 600; cursor: pointer; box-shadow: 0 3px 10px rgba(49, 130, 206, 0.3);">💾 Save Schedule</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Inspections Section -->
+            <div id="view-section" class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <h2 style="margin: 0; color: #e2e8f0;">📊 Recent Inspections</h2>
+                    <button class="delete-all-btn" onclick="deleteAllInspections()">🗑️ Delete All</button>
+                </div>
+                <div id="inspections-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reports-section" class="section">
+                <h2>📈 Inspection Report</h2>
+                <div id="report-content">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration - YOU NEED TO REPLACE THIS WITH YOUR CONFIG
+ 	const firebaseConfig = {
+  		apiKey: "AIzaSyCEzhO5BhgZrlLnnlfJoQ-jOnpHaa6hfHI",
+  		authDomain: "dorm-inspection-system.firebaseapp.com",
+  		projectId: "dorm-inspection-system",
+  		storageBucket: "dorm-inspection-system.firebasestorage.app",
+  		messagingSenderId: "996691705980",
+  		appId: "1:996691705980:web:5c93d55fa107baf14dc9f9",
+  		measurementId: "G-CJ8QZSEQ36"
+	};
+
+        // Initialize Firebase
+        let db;
+        let isConnected = false;
+        
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log('Firebase initialized successfully');
+            updateConnectionStatus(true);
+        } catch (error) {
+            console.error('Firebase initialization failed:', error);
+            updateConnectionStatus(false);
+            showError('Failed to connect to database. Using local storage as backup.');
+        }
+
+        // Global variables
+        var inspections = [];
+        var editingId = null;
+        var scheduledRooms = [];
+        var isLoading = false;
+        
+        var demerits = [
+            "Bed not made or missing 341",
+            "Mirror", 
+            "Vanity/Sink",
+            "Dirty tile or Carpet",
+            "Foul odor",
+            "High dust or excessive clutter",
+            "Trash",
+            "Fridge, freezer, or microwave",
+            "Shower curtain",
+            "Bathtub/shower",
+            "Excessive mold build-up",
+            "Toilet",
+            "Dirty bathroom tile, rugs, or towels"
+        ];
+
+        var autoFailureDemerits = [
+            "HAZMAT",
+            "Unsecured wall locker or keys",
+            "Unsecured valuables or uniforms",
+            "Unsecured prescription medications",
+            "Unsecured Tobacco",
+            "Unsecured perishable food",
+            "Contraband",
+            "Safety items/open window",
+            "To-go container/pizza box"
+        ];
+
+        // Connection status functions
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            
+            if (connected) {
+                statusDot.classList.add('connected');
+                statusText.textContent = 'Connected';
+            } else {
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'Offline';
+            }
+        }
+
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = '<div class="error-message">' + message + '</div>';
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            isLoading = show;
+            const overlay = document.getElementById('loading-overlay');
+            const saveBtn = document.getElementById('save-btn');
+            
+            overlay.style.display = show ? 'flex' : 'none';
+            
+            if (saveBtn) {
+                saveBtn.disabled = show;
+                saveBtn.textContent = show ? 'Saving...' : 'Save Inspection';
+            }
+        }
+
+        // Data management functions
+        async function loadData() {
+            if (!isConnected) {
+                loadLocalData();
+                return;
+            }
+
+            try {
+                showLoading(true);
+                
+                // Load inspections
+                const inspectionsDoc = await db.collection('dormData').doc('inspections').get();
+                if (inspectionsDoc.exists) {
+                    const data = inspectionsDoc.data();
+                    inspections = data.inspections || [];
+                } else {
+                    inspections = [];
+                }
+
+                // Load scheduled rooms
+                const scheduleDoc = await db.collection('dormData').doc('schedule').get();
+                if (scheduleDoc.exists) {
+                    const data = scheduleDoc.data();
+                    scheduledRooms = data.scheduledRooms || [];
+                } else {
+                    scheduledRooms = [];
+                }
+
+                console.log('Data loaded from Firebase:', { inspections: inspections.length, scheduledRooms: scheduledRooms.length });
+                
+            } catch (error) {
+                console.error('Error loading data from Firebase:', error);
+                showError('Failed to load data from database. Using local backup.');
+                loadLocalData();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function loadLocalData() {
+            try {
+                var saved = localStorage.getItem('dormInspections');
+                if (saved) {
+                    inspections = JSON.parse(saved);
+                }
+                var savedSchedule = localStorage.getItem('weeklySchedule');
+                if (savedSchedule) {
+                    scheduledRooms = JSON.parse(savedSchedule);
+                }
+                console.log('Data loaded from localStorage');
+            } catch (e) {
+                inspections = [];
+                scheduledRooms = [];
+                console.error('Error loading local data:', e);
+            }
+        }
+
+        async function saveData() {
+            // Always save locally as backup
+            localStorage.setItem('dormInspections', JSON.stringify(inspections));
+            localStorage.setItem('weeklySchedule', JSON.stringify(scheduledRooms));
+
+            if (!isConnected) {
+                console.log('Data saved locally (offline mode)');
+                return;
+            }
+
+            try {
+                // Save to Firebase
+                await db.collection('dormData').doc('inspections').set({
+                    inspections: inspections,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await db.collection('dormData').doc('schedule').set({
+                    scheduledRooms: scheduledRooms,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                console.log('Data saved to Firebase successfully');
+                
+            } catch (error) {
+                console.error('Error saving to Firebase:', error);
+                showError('Failed to save to database. Data saved locally as backup.');
+            }
+        }
+
+        // Room mode toggle function
+        function toggleRoomMode() {
+            updateRoomDropdown();
+        }
+
+        // Room dropdown update function
+        function updateRoomDropdown() {
+            var roomSelect = document.getElementById('roomNumber');
+            var scheduledMode = document.querySelector('input[name="roomMode"]:checked').value === 'scheduled';
+            
+            roomSelect.innerHTML = '<option value="">Select Room Number</option>';
+            
+            if (scheduledMode) {
+                if (scheduledRooms.length > 0) {
+                    scheduledRooms.sort(function(a, b) { return parseInt(a) - parseInt(b); });
+                    for (var i = 0; i < scheduledRooms.length; i++) {
+                        var option = document.createElement('option');
+                        option.value = scheduledRooms[i];
+                        option.textContent = 'Room ' + scheduledRooms[i];
+                        roomSelect.appendChild(option);
+                    }
+                } else {
+                    var option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No rooms scheduled - Set up weekly schedule first';
+                    option.disabled = true;
+                    roomSelect.appendChild(option);
+                }
+            } else {
+                var group200 = document.createElement('optgroup');
+                group200.label = '200 Series';
+                for (var i = 201; i <= 290; i++) {
+                    var option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    group200.appendChild(option);
+                }
+                roomSelect.appendChild(group200);
+
+                var group300 = document.createElement('optgroup');
+                group300.label = '300 Series';
+                for (var i = 301; i <= 390; i++) {
+                    var option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    group300.appendChild(option);
+                }
+                roomSelect.appendChild(group300);
+            }
+        }
+
+        // Setup form function
+        function setupForm() {
+            updateRoomDropdown();
+
+            // Setup room input for scheduling
+            var roomInput = document.getElementById('roomInput');
+            if (roomInput) {
+                roomInput.innerHTML = '<option value="">Select Room to Add</option>';
+                
+                var group200 = document.createElement('optgroup');
+                group200.label = '200 Series';
+                for (var i = 201; i <= 290; i++) {
+                    var option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    group200.appendChild(option);
+                }
+                roomInput.appendChild(group200);
+
+                var group300 = document.createElement('optgroup');
+                group300.label = '300 Series';
+                for (var i = 301; i <= 390; i++) {
+                    var option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    group300.appendChild(option);
+                }
+                roomInput.appendChild(group300);
+            }
+
+            updateScheduledRoomsDisplay();
+
+            // Setup regular demerits
+            var container = document.getElementById('demerits-container');
+            if (container) {
+                container.innerHTML = '';
+                
+                for (var i = 0; i < demerits.length; i++) {
+                    var card = document.createElement('div');
+                    card.className = 'demerit-item';
+                    card.setAttribute('data-index', i);
+                    card.setAttribute('data-type', 'regular');
+                    
+                    var textDiv = document.createElement('div');
+                    textDiv.className = 'demerit-text';
+                    textDiv.textContent = demerits[i];
+                    
+                    card.appendChild(textDiv);
+                    card.onclick = function() {
+                        this.classList.toggle('checked');
+                        updateScore();
+                    };
+                    
+                    container.appendChild(card);
+                }
+            }
+
+            // Setup auto-failure demerits
+            var autoContainer = document.getElementById('auto-failure-container');
+            if (autoContainer) {
+                autoContainer.innerHTML = '';
+                
+                for (var i = 0; i < autoFailureDemerits.length; i++) {
+                    var card = document.createElement('div');
+                    card.className = 'demerit-item auto-failure';
+                    card.setAttribute('data-index', i);
+                    card.setAttribute('data-type', 'auto-failure');
+                    
+                    var textDiv = document.createElement('div');
+                    textDiv.className = 'demerit-text';
+                    textDiv.textContent = autoFailureDemerits[i];
+                    
+                    card.appendChild(textDiv);
+                    card.onclick = function() {
+                        this.classList.toggle('checked');
+                        updateScore();
+                    };
+                    
+                    autoContainer.appendChild(card);
+                }
+            }
+
+            updateScore();
+        }
+
+        // Score update function
+        function updateScore() {
+            var regularChecked = document.querySelectorAll('.demerit-item[data-type="regular"].checked');
+            var autoFailureChecked = document.querySelectorAll('.demerit-item[data-type="auto-failure"].checked');
+            
+            var regularScore = regularChecked.length;
+            var autoFailureScore = autoFailureChecked.length * 4;
+            var totalScore = regularScore + autoFailureScore;
+            
+            var status = totalScore >= 4 ? 'FAILED' : 'PASSED';
+            
+            var scoreDisplay = document.getElementById('score-display');
+            var scoreText = 'Score: ' + totalScore + ' points';
+            if (autoFailureScore > 0) {
+                scoreText += ' (' + regularScore + ' regular + ' + autoFailureScore + ' auto-failure)';
+            }
+            scoreText += ' - ' + status;
+            
+            scoreDisplay.textContent = scoreText;
+            scoreDisplay.className = 'score-display ' + (totalScore >= 4 ? 'score-fail' : 'score-pass');
+        }
+
+        // Tab navigation function
+        function showTab(tab) {
+            var sections = document.querySelectorAll('.section');
+            for (var i = 0; i < sections.length; i++) {
+                sections[i].classList.remove('active');
+            }
+            
+            var navBtns = document.querySelectorAll('.nav-btn');
+            for (var i = 0; i < navBtns.length; i++) {
+                navBtns[i].classList.remove('active');
+            }
+            
+            if (tab === 'new') {
+                document.getElementById('new-section').classList.add('active');
+                navBtns[0].classList.add('active');
+                setupForm();
+            } else if (tab === 'schedule') {
+                document.getElementById('schedule-section').classList.add('active');
+                navBtns[1].classList.add('active');
+                setupForm();
+            } else if (tab === 'view') {
+                document.getElementById('view-section').classList.add('active');
+                navBtns[2].classList.add('active');
+                loadInspectionsList();
+            } else if (tab === 'reports') {
+                document.getElementById('reports-section').classList.add('active');
+                navBtns[3].classList.add('active');
+                generateReport();
+            }
+        }
+
+        // Schedule management functions
+        async function addRoomToSchedule() {
+            var roomInput = document.getElementById('roomInput');
+            var roomNumber = roomInput.value;
+            
+            if (!roomNumber) {
+                console.log('No room number selected');
+                return;
+            }
+            
+            var roomNumberStr = String(roomNumber);
+            
+            if (scheduledRooms.indexOf(roomNumberStr) !== -1) {
+                console.log('Room ' + roomNumberStr + ' is already scheduled');
+                return;
+            }
+            
+            scheduledRooms.push(roomNumberStr);
+            console.log('Added room to schedule:', roomNumberStr);
+            
+            roomInput.value = '';
+            updateScheduledRoomsDisplay();
+            updateRoomDropdown();
+            
+            // Auto-save schedule
+            await saveData();
+        }
+
+        async function removeRoomFromSchedule(roomNumber) {
+            var index = scheduledRooms.indexOf(String(roomNumber));
+            if (index > -1) {
+                scheduledRooms.splice(index, 1);
+                console.log('Removed room from schedule:', roomNumber);
+                updateScheduledRoomsDisplay();
+                updateRoomDropdown();
+                
+                // Auto-save schedule
+                await saveData();
+            }
+        }
+
+        async function clearAllScheduledRooms() {
+            scheduledRooms = [];
+            console.log('Cleared all scheduled rooms');
+            updateScheduledRoomsDisplay();
+            updateRoomDropdown();
+            
+            // Auto-save schedule
+            await saveData();
+        }
+
+        async function saveSchedule() {
+            await saveData();
+            showMessage('Weekly schedule saved successfully!', 'success');
+        }
+
+        function updateScheduledRoomsDisplay() {
+            var container = document.getElementById('scheduled-rooms');
+            
+            if (scheduledRooms.length === 0) {
+                container.innerHTML = '<p style="color: #a0aec0; text-align: center; margin: 15px 0;">No rooms scheduled yet. Add rooms above.</p>';
+                return;
+            }
+            
+            var sortedRooms = scheduledRooms.slice().sort(function(a, b) { return parseInt(a) - parseInt(b); });
+            var html = '';
+            
+            for (var i = 0; i < sortedRooms.length; i++) {
+                var room = sortedRooms[i];
+                html += '<div class="schedule-room-item">';
+                html += '<div class="schedule-room-number">Room ' + room + '</div>';
+                html += '<button class="remove-room-btn" onclick="removeRoomFromSchedule(\'' + room + '\')" aria-label="Remove room ' + room + '">×</button>';
+                html += '</div>';
+            }
+            
+            html += '<p style="text-align: center; margin-top: 16px; color: #a0aec0; font-size: 0.85rem;">Total: ' + scheduledRooms.length + ' rooms scheduled</p>';
+            container.innerHTML = html;
+        }
+
+        // Inspection management functions
+        async function saveInspection() {
+            if (isLoading) return;
+            
+            var roomNumber = document.getElementById('roomNumber').value;
+            var inspectorName = document.getElementById('inspectorName').value;
+            var notes = document.getElementById('notes').value;
+            
+            var currentDate = new Date();
+            var inspectionDate = currentDate.toISOString().split('T')[0];
+            
+            if (!roomNumber) {
+                console.log('Form validation failed - missing required fields');
+                showMessage('Please select a room number', 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                var selectedDemerits = [];
+                var selectedAutoFailure = [];
+                var regularChecked = document.querySelectorAll('.demerit-item[data-type="regular"].checked');
+                var autoFailureChecked = document.querySelectorAll('.demerit-item[data-type="auto-failure"].checked');
+                
+                for (var i = 0; i < regularChecked.length; i++) {
+                    var index = parseInt(regularChecked[i].getAttribute('data-index'));
+                    selectedDemerits.push(demerits[index]);
+                }
+                
+                for (var i = 0; i < autoFailureChecked.length; i++) {
+                    var index = parseInt(autoFailureChecked[i].getAttribute('data-index'));
+                    selectedAutoFailure.push(autoFailureDemerits[index]);
+                }
+                
+                var regularScore = selectedDemerits.length;
+                var autoFailureScore = selectedAutoFailure.length * 4;
+                var totalScore = regularScore + autoFailureScore;
+                
+                var inspection = {
+                    id: editingId || Date.now(),
+                    roomNumber: roomNumber,
+                    inspectionDate: inspectionDate,
+                    inspectorName: inspectorName,
+                    demerits: selectedDemerits,
+                    autoFailureDemerits: selectedAutoFailure,
+                    regularScore: regularScore,
+                    autoFailureScore: autoFailureScore,
+                    score: totalScore,
+                    status: totalScore >= 4 ? 'FAILED' : 'PASSED',
+                    notes: notes,
+                    timestamp: new Date().toISOString()
+                };
+                
+                var wasRoomRemoved = false;
+                
+                if (editingId) {
+                    for (var i = 0; i < inspections.length; i++) {
+                        if (inspections[i].id === editingId) {
+                            inspections[i] = inspection;
+                            break;
+                        }
+                    }
+                    console.log('Inspection updated successfully');
+                    showMessage('Inspection updated successfully!', 'success');
+                } else {
+                    var roomNumberStr = String(roomNumber);
+                    var roomIndex = scheduledRooms.indexOf(roomNumberStr);
+                    
+                    if (roomIndex > -1) {
+                        scheduledRooms.splice(roomIndex, 1);
+                        wasRoomRemoved = true;
+                        console.log('Room removed! New scheduled rooms:', scheduledRooms);
+                        updateScheduledRoomsDisplay();
+                        updateRoomDropdown();
+                    }
+                    
+                    inspections.push(inspection);
+                    
+                    if (wasRoomRemoved) {
+                        showMessage('Inspection saved! Room ' + roomNumber + ' removed from schedule', 'success');
+                    } else {
+                        showMessage('Inspection saved successfully!', 'success');
+                    }
+                }
+                
+                await saveData();
+                resetForm();
+                
+            } catch (error) {
+                console.error('Error saving inspection:', error);
+                showError('Failed to save inspection. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showMessage(text, type) {
+            var scoreDisplay = document.getElementById('score-display');
+            var originalText = scoreDisplay.textContent;
+            var originalClass = scoreDisplay.className;
+            
+            scoreDisplay.textContent = text;
+            if (type === 'error') {
+                scoreDisplay.style.background = 'linear-gradient(145deg, #e53e3e, #c53030)';
+                scoreDisplay.style.color = '#fed7d7';
+            } else {
+                scoreDisplay.style.background = 'linear-gradient(145deg, #38a169, #2f855a)';
+                scoreDisplay.style.color = '#f0fff4';
+            }
+            
+            setTimeout(function() {
+                scoreDisplay.textContent = originalText;
+                scoreDisplay.className = originalClass;
+                scoreDisplay.style.background = '';
+                scoreDisplay.style.color = '';
+            }, 3000);
+        }
+
+        function resetForm() {
+            editingId = null;
+            document.getElementById('form-title').textContent = 'New Room Inspection';
+            document.getElementById('cancel-btn').style.display = 'none';
+            document.getElementById('roomNumber').value = '';
+            document.getElementById('inspectorName').value = '';
+            document.getElementById('notes').value = '';
+            
+            var allCards = document.querySelectorAll('.demerit-item');
+            for (var i = 0; i < allCards.length; i++) {
+                allCards[i].classList.remove('checked');
+            }
+            updateScore();
+        }
+
+        function editInspection(id) {
+            var inspection = null;
+            for (var i = 0; i < inspections.length; i++) {
+                if (inspections[i].id === id) {
+                    inspection = inspections[i];
+                    break;
+                }
+            }
+            
+            if (!inspection) return;
+            
+            editingId = id;
+            document.getElementById('form-title').textContent = 'Edit Room Inspection';
+            document.getElementById('cancel-btn').style.display = 'inline-block';
+            
+            document.getElementById('roomNumber').value = inspection.roomNumber;
+            document.getElementById('inspectorName').value = inspection.inspectorName;
+            document.getElementById('notes').value = inspection.notes;
+            
+            var allCards = document.querySelectorAll('.demerit-item');
+            for (var i = 0; i < allCards.length; i++) {
+                allCards[i].classList.remove('checked');
+            }
+            
+            if (inspection.demerits) {
+                for (var i = 0; i < inspection.demerits.length; i++) {
+                    var demeritIndex = demerits.indexOf(inspection.demerits[i]);
+                    if (demeritIndex !== -1) {
+                        var card = document.querySelector('[data-type="regular"][data-index="' + demeritIndex + '"]');
+                        if (card) {
+                            card.classList.add('checked');
+                        }
+                    }
+                }
+            }
+            
+            if (inspection.autoFailureDemerits) {
+                for (var i = 0; i < inspection.autoFailureDemerits.length; i++) {
+                    var demeritIndex = autoFailureDemerits.indexOf(inspection.autoFailureDemerits[i]);
+                    if (demeritIndex !== -1) {
+                        var card = document.querySelector('[data-type="auto-failure"][data-index="' + demeritIndex + '"]');
+                        if (card) {
+                            card.classList.add('checked');
+                        }
+                    }
+                }
+            }
+            
+            updateScore();
+            showTab('new');
+        }
+
+        function cancelEdit() {
+            resetForm();
+        }
+
+        async function deleteInspection(id) {
+            try {
+                for (var i = 0; i < inspections.length; i++) {
+                    if (inspections[i].id === id) {
+                        inspections.splice(i, 1);
+                        break;
+                    }
+                }
+                
+                await saveData();
+                loadInspectionsList();
+                console.log('Inspection deleted successfully');
+            } catch (error) {
+                console.error('Error deleting inspection:', error);
+                showError('Failed to delete inspection. Please try again.');
+            }
+        }
+
+        async function deleteAllInspections() {
+            if (inspections.length === 0) {
+                console.log('No inspections to delete');
+                return;
+            }
+            
+            var button = event.target;
+            var clickCount = parseInt(button.getAttribute('data-click-count') || '0');
+            
+            clickCount++;
+            button.setAttribute('data-click-count', clickCount);
+            
+            var originalText = 'Delete All';
+            
+            if (clickCount === 1) {
+                button.textContent = 'Click 2 More Times (' + inspections.length + ' records)';
+                button.style.background = 'linear-gradient(145deg, #ed8936, #dd6b20)';
+                
+                setTimeout(function() {
+                    button.setAttribute('data-click-count', '0');
+                    button.textContent = originalText;
+                    button.style.background = 'linear-gradient(145deg, #e53e3e, #c53030)';
+                }, 5000);
+                
+            } else if (clickCount === 2) {
+                button.textContent = 'FINAL WARNING - Click Once More';
+                button.style.background = 'linear-gradient(145deg, #c53030, #9b2c2c)';
+                
+            } else if (clickCount >= 3) {
+                try {
+                    inspections = [];
+                    await saveData();
+                    loadInspectionsList();
+                    
+                    button.setAttribute('data-click-count', '0');
+                    button.textContent = originalText;
+                    button.style.background = 'linear-gradient(145deg, #e53e3e, #c53030)';
+                    
+                    console.log('All inspections deleted successfully');
+                } catch (error) {
+                    console.error('Error deleting all inspections:', error);
+                    showError('Failed to delete all inspections. Please try again.');
+                }
+            }
+        }
+
+        function loadInspectionsList() {
+            var list = document.getElementById('inspections-list');
+            
+            if (inspections.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #a0aec0; padding: 30px; font-size: 1rem; line-height: 1.4;">No inspections recorded yet. Use the "New Inspection" tab to get started.</p>';
+                return;
+            }
+            
+            var html = '';
+            var sortedInspections = inspections.slice().sort(function(a, b) {
+                return new Date(b.inspectionDate) - new Date(a.inspectionDate);
+            });
+            
+            for (var i = 0; i < sortedInspections.length; i++) {
+                var inspection = sortedInspections[i];
+                
+                html += '<div class="inspection-card ' + inspection.status.toLowerCase() + '">';
+                html += '<div class="card-actions">';
+                html += '<button class="edit-btn" onclick="editInspection(' + inspection.id + ')">Edit</button>';
+                html += '<button class="delete-btn" onclick="deleteInspection(' + inspection.id + ')">Delete</button>';
+                html += '</div>';
+                html += '<h3>Room ' + inspection.roomNumber + ' - ' + inspection.status + '</h3>';
+                html += '<p><strong>Date:</strong> ' + new Date(inspection.inspectionDate).toLocaleDateString() + '</p>';
+                html += '<p><strong>Inspector:</strong> ' + (inspection.inspectorName || 'Not specified') + '</p>';
+                html += '<p><strong>Score:</strong> ' + inspection.score + ' points';
+                if (inspection.autoFailureScore && inspection.autoFailureScore > 0) {
+                    html += ' (' + (inspection.regularScore || 0) + ' regular + ' + inspection.autoFailureScore + ' auto-failure)';
+                }
+                html += '</p>';
+                
+                if (inspection.demerits && inspection.demerits.length > 0) {
+                    html += '<p><strong>Regular Violations:</strong> <span class="violation-list">' + inspection.demerits.join(', ') + '</span></p>';
+                }
+                
+                if (inspection.autoFailureDemerits && inspection.autoFailureDemerits.length > 0) {
+                    html += '<p><strong>Auto-Failure Violations:</strong> <span class="violation-list">' + inspection.autoFailureDemerits.join(', ') + '</span></p>';
+                }
+                
+                if (inspection.notes) {
+                    html += '<p><strong>Notes:</strong> ' + inspection.notes + '</p>';
+                }
+                
+                html += '</div>';
+            }
+            
+            list.innerHTML = html;
+        }
+
+        function generateReport() {
+            var content = document.getElementById('report-content');
+            
+            if (inspections.length === 0) {
+                content.innerHTML = '<p style="font-size: 1rem; color: #a0aec0; text-align: center; padding: 20px; line-height: 1.4;">No data available for report generation. Complete some inspections first.</p>';
+                return;
+            }
+            
+            var total = inspections.length;
+            var passed = inspections.filter(function(i) { return i.status === 'PASSED'; }).length;
+            var failed = inspections.filter(function(i) { return i.status === 'FAILED'; }).length;
+            var passRate = ((passed / total) * 100).toFixed(1);
+            
+            var html = '<div style="text-align: center; margin-bottom: 30px;">';
+            html += '<h3 style="font-size: 1.3rem; margin-bottom: 8px; color: #e2e8f0;">Weekly Dorm Inspection Summary</h3>';
+            html += '<p style="font-size: 0.9rem; color: #a0aec0;">Report Generated: ' + new Date().toLocaleDateString() + '</p>';
+            if (!isConnected) {
+                html += '<p style="font-size: 0.8rem; color: #fed7d7; margin-top: 4px;">⚠️ Showing local data (offline mode)</p>';
+            }
+            html += '</div>';
+            
+            html += '<div class="stats-grid">';
+            html += '<div class="stat-card total">';
+            html += '<div class="stat-number">' + total + '</div>';
+            html += '<div class="stat-label">Total</div>';
+            html += '</div>';
+            html += '<div class="stat-card pass">';
+            html += '<div class="stat-number">' + passed + '</div>';
+            html += '<div class="stat-label">Passed</div>';
+            html += '</div>';
+            html += '<div class="stat-card fail">';
+            html += '<div class="stat-number">' + failed + '</div>';
+            html += '<div class="stat-label">Failed</div>';
+            html += '</div>';
+            html += '<div class="stat-card rate">';
+            html += '<div class="stat-number">' + passRate + '%</div>';
+            html += '<div class="stat-label">Pass Rate</div>';
+            html += '</div>';
+            html += '</div>';
+            
+            // Generate most common demerits section
+            var demeritCounts = {};
+            
+            for (var i = 0; i < inspections.length; i++) {
+                var inspection = inspections[i];
+                if (inspection.demerits) {
+                    for (var j = 0; j < inspection.demerits.length; j++) {
+                        var demerit = inspection.demerits[j];
+                        demeritCounts[demerit] = (demeritCounts[demerit] || 0) + 1;
+                    }
+                }
+                if (inspection.autoFailureDemerits) {
+                    for (var j = 0; j < inspection.autoFailureDemerits.length; j++) {
+                        var demerit = inspection.autoFailureDemerits[j];
+                        demeritCounts[demerit] = (demeritCounts[demerit] || 0) + 1;
+                    }
+                }
+            }
+            
+            var sortedDemerits = [];
+            for (var demerit in demeritCounts) {
+                sortedDemerits.push({
+                    name: demerit,
+                    count: demeritCounts[demerit],
+                    percentage: ((demeritCounts[demerit] / total) * 100).toFixed(1)
+                });
+            }
+            sortedDemerits.sort(function(a, b) { return b.count - a.count; });
+            
+            if (sortedDemerits.length > 0) {
+                html += '<div style="margin: 30px 0; background: linear-gradient(135deg, #2d3748, #1a202c); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid #4a5568;">';
+                html += '<h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #e2e8f0; text-align: center;">Top 5 Most Common Violations</h3>';
+                
+                var topDemerits = sortedDemerits.slice(0, 5);
+                for (var i = 0; i < topDemerits.length; i++) {
+                    var demerit = topDemerits[i];
+                    var isAutoFailure = autoFailureDemerits.indexOf(demerit.name) !== -1;
+                    var barColor = isAutoFailure ? '#f56565' : '#3182ce';
+                    var textColor = isAutoFailure ? '#fed7d7' : '#e2e8f0';
+                    var badgeText = isAutoFailure ? 'AUTO-FAIL' : 'REGULAR';
+                    var badgeColor = isAutoFailure ? '#c53030' : '#2c5282';
+                    
+                    html += '<div style="margin-bottom: 16px; background: linear-gradient(135deg, #4a5568, #2d3748); padding: 16px; border-radius: 10px; border: 1px solid ' + barColor + ';">';
+                    html += '<div style="margin-bottom: 8px;">';
+                    html += '<div style="font-weight: 600; color: ' + textColor + '; font-size: 0.85rem; line-height: 1.3;">' + (i + 1) + '. ' + demerit.name + '</div>';
+                    html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">';
+                    html += '<span style="background: ' + badgeColor + '; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700;">' + badgeText + '</span>';
+                    html += '<span style="color: #cbd5e0; font-size: 0.8rem; font-weight: 600;">';
+                    html += demerit.count + ' times (' + demerit.percentage + '%)';
+                    html += '</span>';
+                    html += '</div>';
+                    html += '</div>';
+                    
+                    var maxCount = topDemerits[0].count;
+                    var barWidth = (demerit.count / maxCount) * 100;
+                    html += '<div style="background: rgba(74, 85, 104, 0.3); height: 6px; border-radius: 3px; overflow: hidden;">';
+                    html += '<div style="background: ' + barColor + '; height: 100%; width: ' + barWidth + '%; border-radius: 3px; transition: width 0.3s ease;"></div>';
+                    html += '</div>';
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            
+            html += '<div class="export-buttons">';
+            html += '<button onclick="window.print()" class="export-btn print-btn">📱 Print Report</button>';
+            html += '<button onclick="exportToCSV()" class="export-btn csv-btn">📊 Export CSV</button>';
+            html += '<button onclick="exportToExcel()" class="export-btn excel-btn">📋 Export Excel</button>';
+            html += '</div>';
+            
+            content.innerHTML = html;
+        }
+
+        function exportToCSV() {
+            if (inspections.length === 0) {
+                console.log('No data to export');
+                return;
+            }
+            
+            var headers = ['Room Number', 'Date', 'Inspector', 'Regular Score', 'Auto-Failure Score', 'Total Score', 'Status', 'Notes'];
+            var csvContent = headers.join(',') + '\n';
+            
+            for (var i = 0; i < inspections.length; i++) {
+                var inspection = inspections[i];
+                var row = [
+                    inspection.roomNumber,
+                    inspection.inspectionDate,
+                    inspection.inspectorName || '',
+                    inspection.regularScore || 0,
+                    inspection.autoFailureScore || 0,
+                    inspection.score,
+                    inspection.status,
+                    '"' + (inspection.notes || '') + '"'
+                ];
+                csvContent += row.join(',') + '\n';
+            }
+            
+            var blob = new Blob([csvContent], { type: 'text/csv' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'dorm-inspection-report-' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            console.log('CSV report downloaded successfully');
+        }
+
+        function exportToExcel() {
+            if (inspections.length === 0) {
+                console.log('No data to export');
+                return;
+            }
+
+            var total = inspections.length;
+            var passed = inspections.filter(function(i) { return i.status === 'PASSED'; }).length;
+            var failed = inspections.filter(function(i) { return i.status === 'FAILED'; }).length;
+            var passRate = ((passed / total) * 100).toFixed(1);
+            
+            var htmlContent = '<!DOCTYPE html><html><head><meta charset="utf-8">';
+            htmlContent += '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
+            htmlContent += '<style>';
+            htmlContent += '@page { size: 8.5in 11in; margin: 0.5in; }';
+            htmlContent += 'body { font-family: Arial, sans-serif; font-size: 10pt; margin: 0; }';
+            htmlContent += 'table { border-collapse: collapse; width: 100%; page-break-inside: avoid; }';
+            htmlContent += 'th, td { border: 1px solid #000; padding: 3px; text-align: center; font-size: 8pt; }';
+            htmlContent += '.title { background: #1a365d; color: white; font-size: 14pt; font-weight: bold; padding: 8px; text-align: center; }';
+            htmlContent += '.summary { background: #e2e8f0; color: #1a202c; font-weight: bold; font-size: 9pt; padding: 4px; text-align: center; }';
+            htmlContent += '.header { background: #2d3748; color: white; font-weight: bold; font-size: 8pt; }';
+            htmlContent += '.room-cell { background: #f7fafc; font-weight: bold; font-size: 9pt; }';
+            htmlContent += '.status-pass { background: #68d391; color: #1a202c; font-weight: bold; }';
+            htmlContent += '.status-fail { background: #f56565; color: white; font-weight: bold; }';
+            htmlContent += '.notes-cell { background: #f7fafc; font-size: 7pt; text-align: left; max-width: 120px; word-wrap: break-word; }';
+            htmlContent += '</style></head><body>';
+            
+            htmlContent += '<table>';
+            htmlContent += '<tr><td colspan="8" class="title">DORM INSPECTION REPORT - ' + new Date().toLocaleDateString() + '</td></tr>';
+            htmlContent += '</table><br>';
+            
+            htmlContent += '<table>';
+            htmlContent += '<tr>';
+            htmlContent += '<td class="summary">Total: ' + total + '</td>';
+            htmlContent += '<td class="summary" style="background: #c6f6d5;">Pass: ' + passed + '</td>';
+            htmlContent += '<td class="summary" style="background: #fed7d7;">Fail: ' + failed + '</td>';
+            htmlContent += '<td class="summary" style="background: #bee3f8;">Rate: ' + passRate + '%</td>';
+            htmlContent += '</tr>';
+            htmlContent += '</table><br>';
+            
+            htmlContent += '<table>';
+            htmlContent += '<tr>';
+            htmlContent += '<td class="header">Room</td>';
+            htmlContent += '<td class="header">Date</td>';
+            htmlContent += '<td class="header">Inspector</td>';
+            htmlContent += '<td class="header">Reg Score</td>';
+            htmlContent += '<td class="header">AF Score</td>';
+            htmlContent += '<td class="header">Total</td>';
+            htmlContent += '<td class="header">Status</td>';
+            htmlContent += '<td class="header">Notes</td>';
+            htmlContent += '</tr>';
+            
+            for (var i = 0; i < inspections.length; i++) {
+                var inspection = inspections[i];
+                htmlContent += '<tr>';
+                htmlContent += '<td class="room-cell">' + escapeHtml(inspection.roomNumber) + '</td>';
+                htmlContent += '<td class="room-cell">' + new Date(inspection.inspectionDate).toLocaleDateString() + '</td>';
+                htmlContent += '<td>' + escapeHtml(inspection.inspectorName || '') + '</td>';
+                htmlContent += '<td>' + (inspection.regularScore || 0) + '</td>';
+                htmlContent += '<td>' + (inspection.autoFailureScore || 0) + '</td>';
+                htmlContent += '<td style="font-weight: bold;">' + inspection.score + '</td>';
+                
+                var statusClass = inspection.status === 'PASSED' ? 'status-pass' : 'status-fail';
+                var statusText = inspection.status === 'PASSED' ? 'PASS' : 'FAIL';
+                htmlContent += '<td class="' + statusClass + '">' + statusText + '</td>';
+                
+                var notesText = inspection.notes || '';
+                if (notesText.length > 60) {
+                    notesText = notesText.substring(0, 57) + '...';
+                }
+                htmlContent += '<td class="notes-cell">' + escapeHtml(notesText) + '</td>';
+                htmlContent += '</tr>';
+            }
+            
+            htmlContent += '</table>';
+            htmlContent += '</body></html>';
+            
+            var blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'dorm-inspection-report-' + new Date().toISOString().split('T')[0] + '.xls';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            console.log('Mobile-optimized Excel report downloaded successfully');
+        }
+
+        function escapeHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initialize the application
+        window.onload = async function() {
+            console.log('Application starting...');
+            await loadData();
+            setupForm();
+            console.log('Application ready');
+        };
+
+        // Real-time sync listener (optional - for live collaboration)
+        if (db) {
+            // Listen for changes to inspections
+            db.collection('dormData').doc('inspections').onSnapshot(function(doc) {
+                if (doc.exists && !isLoading) {
+                    const data = doc.data();
+                    const newInspections = data.inspections || [];
+                    
+                    // Only update if the data is different (to avoid infinite loops)
+                    if (JSON.stringify(newInspections) !== JSON.stringify(inspections)) {
+                        console.log('Inspections updated from server');
+                        inspections = newInspections;
+                        
+                        // Refresh current view if needed
+                        const activeSection = document.querySelector('.section.active');
+                        if (activeSection && activeSection.id === 'view-section') {
+                            loadInspectionsList();
+                        } else if (activeSection && activeSection.id === 'reports-section') {
+                            generateReport();
+                        }
+                    }
+                }
+            }, function(error) {
+                console.error('Error listening to inspections changes:', error);
+            });
+
+            // Listen for changes to schedule
+            db.collection('dormData').doc('schedule').onSnapshot(function(doc) {
+                if (doc.exists && !isLoading) {
+                    const data = doc.data();
+                    const newScheduledRooms = data.scheduledRooms || [];
+                    
+                    if (JSON.stringify(newScheduledRooms) !== JSON.stringify(scheduledRooms)) {
+                        console.log('Schedule updated from server');
+                        scheduledRooms = newScheduledRooms;
+                        updateScheduledRoomsDisplay();
+                        updateRoomDropdown();
+                    }
+                }
+            }, function(error) {
+                console.error('Error listening to schedule changes:', error);
+            });
+        }
+
+        // Touch and mobile optimizations
+        document.addEventListener('touchstart', function() {}, {passive: true});
+        
+        document.addEventListener('touchend', function(event) {
+            var now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        var lastTouchEnd = 0;
+
+        window.addEventListener('orientationchange', function() {
+            setTimeout(function() {
+                document.body.style.height = window.innerHeight + 'px';
+                setTimeout(function() {
+                    document.body.style.height = '';
+                }, 100);
+            }, 100);
+        });
+
+        document.addEventListener('touchmove', function(event) {
+            if (event.scale !== 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
