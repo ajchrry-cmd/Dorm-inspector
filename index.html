@@ -1,0 +1,3320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Dorm Inspector</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --background: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="light"] {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --surface-light: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--background);
+            min-height: 100vh;
+            color: var(--text-primary);
+            font-size: 16px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            touch-action: manipulation;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 24px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.2s ease;
+        }
+
+        .header-title:active {
+            transform: scale(0.98);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .header-text h1 {
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        .header-text p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .icon-button {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            font-size: 18px;
+        }
+
+        .icon-button:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--error);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Navigation */
+        .nav-container {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 88px;
+            z-index: 90;
+        }
+
+        .nav-tabs {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 0;
+        }
+
+        .nav-tab {
+            padding: 16px 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-tab-icon {
+            font-size: 20px;
+        }
+
+        .nav-tab::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+        }
+
+        .nav-tab.active::after {
+            transform: scaleX(1);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px var(--shadow);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        /* Toggle Switch */
+        .toggle-card {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            margin-bottom: 24px;
+        }
+
+        .toggle-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .toggle-option {
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .toggle-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            accent-color: white;
+        }
+
+        .toggle-option:has(input:checked) {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.02);
+        }
+
+        /* Form Elements */
+        .form-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--surface-light);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Demerit Items */
+        .demerits-section {
+            margin: 24px 0;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-badge {
+            padding: 4px 12px;
+            background: var(--primary);
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .section-badge.danger {
+            background: var(--error);
+        }
+
+        .demerits-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .demerit-item {
+            padding: 16px 20px;
+            background: var(--surface-light);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demerit-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--primary);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .demerit-item.auto-failure::before {
+            background: var(--error);
+        }
+
+        .demerit-item:active {
+            transform: scale(0.98);
+        }
+
+        .demerit-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .demerit-item.checked {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--error);
+        }
+
+        .demerit-item.checked::before {
+            transform: scaleY(1);
+        }
+
+        .demerit-item.checked .demerit-checkbox {
+            background: var(--error);
+            border-color: var(--error);
+        }
+
+        .demerit-item.checked .demerit-checkbox::after {
+            content: '✓';
+            color: white;
+            font-weight: 700;
+        }
+
+        .demerit-text {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        /* Score Display */
+        .score-card {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            margin: 24px 0;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+        }
+
+        .score-card.outstanding {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
+
+        .score-card.pass {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+        }
+
+        .score-card.fail {
+            background: linear-gradient(135deg, var(--error), #dc2626);
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+        }
+
+        .score-number {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .score-label {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--surface-light);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error), #dc2626);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #d97706);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Room Tiles */
+        .room-tiles-container {
+            background: var(--surface-light);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .room-tiles-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .room-tiles-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        .room-tiles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .room-tile {
+            aspect-ratio: 1;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+            position: relative;
+            padding: 8px;
+        }
+
+        .room-tile:active {
+            transform: scale(0.95);
+        }
+
+        .room-tile.selected {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+            transform: scale(1.05);
+        }
+
+        .room-tile.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            font-size: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .room-number {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .room-badges {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .room-badge {
+            padding: 2px 6px;
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .room-badge.shift {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--secondary);
+        }
+
+        .room-badge.gender-male {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .room-badge.gender-female {
+            background: rgba(236, 72, 153, 0.2);
+            color: var(--accent);
+        }
+
+        .room-tile.selected .room-badge {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        /* Inspection Cards */
+        .inspection-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .inspection-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .inspection-card.pass {
+            border-left: 4px solid var(--success);
+        }
+
+        .inspection-card.fail {
+            border-left: 4px solid var(--error);
+        }
+
+        .inspection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .inspection-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .inspection-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .inspection-badge.pass {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .inspection-badge.fail {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+        }
+
+        .inspection-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: transparent;
+        }
+
+        .stat-card.highlight .stat-number,
+        .stat-card.highlight .stat-label {
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            display: none;
+            margin: 24px 0;
+        }
+
+        .admin-panel.active {
+            display: block;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, var(--error), #dc2626);
+            color: white;
+            padding: 24px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .admin-body {
+            background: var(--surface);
+            border: 2px solid var(--error);
+            border-top: none;
+            border-radius: 0 0 16px 16px;
+            padding: 24px;
+        }
+
+        .admin-section {
+            margin-bottom: 24px;
+        }
+
+        .admin-section h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .admin-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-text h1 {
+                font-size: 16px;
+            }
+
+            .header-text p {
+                display: none;
+            }
+
+            .nav-tabs {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .nav-tab {
+                font-size: 11px;
+                padding: 12px 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Smooth scrolling */
+        .room-tiles-grid, .modal-content {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Dark mode toggle styles */
+        .theme-switcher {
+            display: flex;
+            gap: 8px;
+            padding: 16px;
+            background: var(--surface-light);
+            border-radius: 12px;
+        }
+
+        .theme-option {
+            flex: 1;
+            padding: 12px;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-option.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="font-size: 24px; font-weight: 800;">⚙️ Settings</h2>
+                <button onclick="closeSettings()" class="icon-button" style="background: var(--surface-light);">×</button>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 12px;">Theme</label>
+                <div class="theme-switcher">
+                    <div class="theme-option" onclick="setTheme('dark')" id="theme-dark">🌙 Dark</div>
+                    <div class="theme-option" onclick="setTheme('light')" id="theme-light">☀️ Light</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label style="display: flex; justify-content: space-between; align-items: center; font-weight: 600;">
+                    Haptic Feedback
+                    <div onclick="toggleHaptic()" style="width: 56px; height: 32px; background: var(--border); border-radius: 16px; position: relative; cursor: pointer; transition: all 0.3s ease;" id="haptic-toggle">
+                        <div style="position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; background: white; border-radius: 50%; transition: all 0.3s ease;" id="haptic-slider"></div>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Management Modal -->
+    <div class="modal" id="room-management-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="font-size: 24px; font-weight: 800;">🏠 Manage Room Properties</h2>
+                <button onclick="closeRoomManagement()" class="icon-button" style="background: var(--surface-light);">×</button>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px;">Select Room</label>
+                <select id="room-edit-select" class="form-select" onchange="loadRoomProperties()">
+                    <option value="">Choose a room to edit</option>
+                </select>
+            </div>
+
+            <div id="room-edit-form" style="display: none;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Shift</label>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                        <button class="shift-btn" data-shift="S" onclick="selectShift('S')" style="padding: 12px; background: var(--surface-light); border: 2px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">S</button>
+                        <button class="shift-btn" data-shift="T" onclick="selectShift('T')" style="padding: 12px; background: var(--surface-light); border: 2px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">T</button>
+                        <button class="shift-btn" data-shift="R" onclick="selectShift('R')" style="padding: 12px; background: var(--surface-light); border: 2px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">R</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Gender</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <button class="gender-btn" data-gender="Male" onclick="selectGender('Male')" style="padding: 12px; background: var(--surface-light); border: 2px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">👨 Male</button>
+                        <button class="gender-btn" data-gender="Female" onclick="selectGender('Female')" style="padding: 12px; background: var(--surface-light); border: 2px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">👩 Female</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveRoomProperties()" style="width: 100%;">💾 Save Room Properties</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="header-title" id="main-title">
+                    <div class="logo-icon">🏢</div>
+                    <div class="header-text">
+                        <h1>Dorm Inspector</h1>
+                        <p>Weekly Room Management</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <div class="status-badge">
+                        <div class="status-dot" id="status-dot"></div>
+                        <span id="status-text">Offline</span>
+                    </div>
+                    <button class="icon-button" onclick="openSettings()">⚙️</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-container">
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('new')">
+                    <span class="nav-tab-icon">📋</span>
+                    <span>Inspect</span>
+                </button>
+                <button class="nav-tab" onclick="showTab('schedule')">
+                    <span class="nav-tab-icon">📅</span>
+                    <span>Schedule</span>
+                </button>
+                <button class="nav-tab" onclick="showTab('view')">
+                    <span class="nav-tab-icon">📊</span>
+                    <span>History</span>
+                </button>
+                <button class="nav-tab" onclick="showTab('reports')">
+                    <span class="nav-tab-icon">📈</span>
+                    <span>Reports</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div id="error-container"></div>
+
+            <!-- Admin Panel -->
+            <div id="admin-panel" class="admin-panel">
+                <div class="admin-header">
+                    <div>
+                        <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 4px;">🔧 Admin Panel</h3>
+                        <p style="font-size: 13px; opacity: 0.9;">System Management</p>
+                    </div>
+                    <button class="admin-close" onclick="closeAdminPanel()">×</button>
+                </div>
+                <div class="admin-body">
+                    <div class="admin-section">
+                        <h4>🏠 Room Management</h4>
+                        <div class="admin-grid">
+                            <button class="btn btn-primary" onclick="openRoomManagement()">✏️ Edit Room Properties</button>
+                            <button class="btn btn-warning" onclick="bulkSetRoomProperties()">🔧 Bulk Set Properties</button>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 12px;">
+                            Configured rooms: <span id="configured-rooms-count">0</span>
+                        </p>
+                    </div>
+
+                    <div class="admin-section">
+                        <h4>📊 Statistics</h4>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="admin-total-inspections">0</div>
+                                <div class="stat-label">Inspections</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="admin-scheduled-rooms">0</div>
+                                <div class="stat-label">Scheduled</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="admin-connection-status">●</div>
+                                <div class="stat-label">Database</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="admin-data-size">0KB</div>
+                                <div class="stat-label">Data Size</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-section">
+                        <h4>🗄️ Data Management</h4>
+                        <div class="admin-grid">
+                            <button class="btn btn-primary" onclick="forceDataSync()">🔄 Sync Firebase</button>
+                            <button class="btn btn-warning" onclick="exportAllData()">📁 Export JSON</button>
+                            <button class="btn btn-warning" onclick="importDataPrompt()">📤 Import Data</button>
+                            <button class="btn btn-danger" onclick="resetAllData()">⚠️ Reset All</button>
+                        </div>
+                    </div>
+
+                    <div class="admin-section">
+                        <h4>👥 Inspectors</h4>
+                        <div class="admin-grid">
+                            <button class="btn btn-primary" onclick="manageInspectors()">✏️ Edit Names</button>
+                            <button class="btn btn-secondary" onclick="resetInspectorNames()">🔄 Reset Names</button>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 12px;">
+                            <span id="current-inspectors"></span>
+                        </p>
+                    </div>
+
+                    <div class="admin-section">
+                        <h4>📈 Analytics</h4>
+                        <div class="admin-grid">
+                            <button class="btn btn-primary" onclick="generateInspectorAnalytics()">👥 Performance</button>
+                            <button class="btn btn-primary" onclick="generateDemeritTrends()">📊 Violations</button>
+                            <button class="btn btn-primary" onclick="generateTimelineReport()">📅 Timeline</button>
+                        </div>
+                        <div id="analytics-display" style="display: none; margin-top: 16px; padding: 16px; background: var(--surface-light); border-radius: 12px; position: relative;">
+                            <button onclick="closeAnalytics()" style="position: absolute; top: 12px; right: 12px; background: var(--error); color: white; border: none; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">×</button>
+                            <div id="analytics-content"></div>
+                        </div>
+                    </div>
+
+                    <div class="admin-section">
+                        <h4>🔧 Tools</h4>
+                        <div class="admin-grid">
+                            <button class="btn btn-secondary" onclick="clearLocalStorage()">💾 Clear Storage</button>
+                            <button class="btn btn-secondary" onclick="testFirebaseConnection()">🔍 Test Firebase</button>
+                            <button class="btn btn-warning" onclick="generateTestData()">🧪 Test Data</button>
+                        </div>
+                        <div id="admin-log" style="margin-top: 16px; padding: 12px; background: var(--background); border-radius: 8px; font-family: 'Courier New', monospace; font-size: 11px; color: var(--text-muted); max-height: 120px; overflow-y: auto;">
+                            Admin panel initialized...<br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Inspection Section -->
+            <div id="new-section" class="section active">
+                <div class="card toggle-card">
+                    <div class="card-header">
+                        <span style="font-size: 18px; font-weight: 700;">Room Selection Mode</span>
+                    </div>
+                    <div class="toggle-options">
+                        <label class="toggle-option">
+                            <input type="radio" name="roomMode" value="scheduled" checked onchange="toggleRoomMode()">
+                            <span>📅 Scheduled</span>
+                        </label>
+                        <label class="toggle-option">
+                            <input type="radio" name="roomMode" value="all" onchange="toggleRoomMode()">
+                            <span>🏢 All Rooms</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📋</div>
+                        <h2 class="card-title" id="form-title">New Inspection</h2>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="roomNumber">Room Number *</label>
+                            <select id="roomNumber" class="form-select" required>
+                                <option value="">Select Room Number</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="inspectorName">Inspector Name (optional)</label>
+                            <select id="inspectorName" class="form-select">
+                                <option value="">Select Inspector</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demerits-section">
+                    <div class="section-header">
+                        <h3 style="font-size: 16px; font-weight: 700; flex: 1;">Regular Violations</h3>
+                        <span class="section-badge">1 Point Each</span>
+                    </div>
+                    <div class="demerits-grid" id="demerits-container"></div>
+                </div>
+
+                <div class="demerits-section">
+                    <div class="section-header">
+                        <h3 style="font-size: 16px; font-weight: 700; flex: 1;">⚠️ Auto-Failure Violations</h3>
+                        <span class="section-badge danger">4 Points Each</span>
+                    </div>
+                    <div class="demerits-grid" id="auto-failure-container"></div>
+                </div>
+
+                <div class="score-card" id="score-display">
+                    <div class="score-number">0</div>
+                    <div class="score-label">PASSED</div>
+                </div>
+
+                <div class="card">
+                    <div class="form-group">
+                        <label for="notes">Additional Notes</label>
+                        <textarea id="notes" class="form-textarea" rows="3" placeholder="Any observations..."></textarea>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveInspection()" id="save-btn" style="width: 100%;">
+                    💾 Save Inspection
+                </button>
+                <button class="btn btn-secondary" id="cancel-btn" onclick="cancelEdit()" style="width: 100%; margin-top: 12px; display: none;">
+                    Cancel Edit
+                </button>
+            </div>
+
+            <!-- Schedule Section -->
+            <div id="schedule-section" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📅</div>
+                        <h2 class="card-title">Weekly Schedule</h2>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <button class="btn btn-secondary" onclick="openRoomManagement()" style="width: 100%;">
+                            🏠 Manage Room Properties (Shift & Gender)
+                        </button>
+                    </div>
+
+                    <div class="room-tiles-container">
+                        <div class="room-tiles-header">
+                            <label style="font-weight: 600;">Select Rooms:</label>
+                            <div class="room-tiles-controls">
+                                <button class="btn btn-success btn-small" onclick="selectAllRooms()">Select All</button>
+                                <button class="btn btn-danger btn-small" onclick="clearAllSelectedRooms()">Clear</button>
+                            </div>
+                        </div>
+                        <div class="room-tiles-grid" id="room-tiles-grid"></div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="addSelectedRoomsToSchedule()" style="width: 100%;">
+                        ➕ Add to Schedule
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Scheduled Rooms</h3>
+                    <div id="scheduled-rooms" style="min-height: 100px;"></div>
+                </div>
+
+                <div style="display: grid; gap: 12px;">
+                    <button class="btn btn-danger" onclick="clearAllScheduledRooms()">🗑️ Clear All</button>
+                    <button class="btn btn-primary" onclick="saveSchedule()">💾 Save Schedule</button>
+                </div>
+            </div>
+
+            <!-- View Section -->
+            <div id="view-section" class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h2 style="font-size: 24px; font-weight: 800;">Recent Inspections</h2>
+                    <button class="btn btn-danger btn-small" onclick="deleteAllInspections()">🗑️ Delete All</button>
+                </div>
+                <div id="inspections-list"></div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reports-section" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📈</div>
+                        <h2 class="card-title">Inspection Report</h2>
+                    </div>
+                    <div id="report-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCEzhO5BhgZrlLnnlfJoQ-jOnpHaa6hfHI",
+            authDomain: "dorm-inspection-system.firebaseapp.com",
+            projectId: "dorm-inspection-system",
+            storageBucket: "dorm-inspection-system.firebasestorage.app",
+            messagingSenderId: "996691705980",
+            appId: "1:996691705980:web:5c93d55fa107baf14dc9f9",
+            measurementId: "G-CJ8QZSEQ36"
+        };
+
+        // Settings
+        let settings = {
+            theme: 'dark',
+            hapticFeedback: true
+        };
+
+        function loadSettings() {
+            const saved = localStorage.getItem('inspectorSettings');
+            if (saved) {
+                settings = { ...settings, ...JSON.parse(saved) };
+            }
+            applySettings();
+        }
+
+        function saveSettings() {
+            localStorage.setItem('inspectorSettings', JSON.stringify(settings));
+        }
+
+        function applySettings() {
+            document.body.setAttribute('data-theme', settings.theme);
+            updateHapticToggle();
+            updateThemeButtons();
+        }
+
+        function updateThemeButtons() {
+            document.querySelectorAll('.theme-option').forEach(el => {
+                el.classList.remove('active');
+            });
+            const activeTheme = document.getElementById('theme-' + settings.theme);
+            if (activeTheme) {
+                activeTheme.classList.add('active');
+            }
+        }
+
+        function openSettings() {
+            document.getElementById('settings-modal').classList.add('show');
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.remove('show');
+            saveSettings();
+        }
+
+        function setTheme(theme) {
+            settings.theme = theme;
+            applySettings();
+        }
+
+        function toggleHaptic() {
+            settings.hapticFeedback = !settings.hapticFeedback;
+            updateHapticToggle();
+            if (settings.hapticFeedback && 'vibrate' in navigator) {
+                navigator.vibrate(20);
+            }
+        }
+
+        function updateHapticToggle() {
+            const toggle = document.getElementById('haptic-toggle');
+            const slider = document.getElementById('haptic-slider');
+            if (settings.hapticFeedback) {
+                slider.style.left = '28px';
+                toggle.style.background = 'var(--primary)';
+            } else {
+                slider.style.left = '4px';
+                toggle.style.background = 'var(--border)';
+            }
+        }
+
+        // Initialize Firebase
+        let db;
+        let isConnected = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log('Firebase initialized');
+            updateConnectionStatus(true);
+        } catch (error) {
+            console.error('Firebase init failed:', error);
+            updateConnectionStatus(false);
+        }
+
+        // Global variables
+        var inspections = [];
+        var editingId = null;
+        var scheduledRooms = [];
+        var isLoading = false;
+        var selectedRoomTiles = new Set();
+        var titleClickCount = 0;
+        var titleClickTimer = null;
+        var inspectorNames = ['Hoskins', 'Troope', 'Smith', 'Cherry', 'Avila', 'Young', 'Grier'];
+        var roomProperties = {}; // { roomNumber: { shift: 'S/T/R', gender: 'Male/Female' } }
+
+        var demerits = [
+            "Bed not made or missing 341",
+            "Mirror",
+            "Vanity/Sink",
+            "Dirty tile or Carpet",
+            "Foul odor",
+            "High dust or excessive clutter",
+            "Trash",
+            "Fridge, freezer, or microwave",
+            "Shower curtain",
+            "Bathtub/shower",
+            "Excessive mold build-up",
+            "Toilet",
+            "Dirty bathroom tile, rugs, or towels"
+        ];
+
+        var autoFailureDemerits = [
+            "HAZMAT",
+            "Unsecured wall locker or keys",
+            "Unsecured valuables or uniforms",
+            "Unsecured prescription medications",
+            "Unsecured Tobacco",
+            "Unsecured perishable food",
+            "Contraband",
+            "Safety items/open window",
+            "To-go container/pizza box"
+        ];
+
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+
+            if (connected) {
+                statusDot.classList.add('connected');
+                statusText.textContent = 'Online';
+            } else {
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'Offline';
+            }
+        }
+
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `
+                <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--error); padding: 16px; border-radius: 12px; margin-bottom: 20px; color: var(--text-primary);">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        function showLoading(show) {
+            isLoading = show;
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.toggle('show', show);
+        }
+
+        async function loadData() {
+            if (!isConnected) {
+                loadLocalData();
+                return;
+            }
+
+            try {
+                showLoading(true);
+                const inspectionsDoc = await db.collection('dormData').doc('inspections').get();
+                if (inspectionsDoc.exists) {
+                    inspections = inspectionsDoc.data().inspections || [];
+                }
+
+                const scheduleDoc = await db.collection('dormData').doc('schedule').get();
+                if (scheduleDoc.exists) {
+                    scheduledRooms = scheduleDoc.data().scheduledRooms || [];
+                }
+
+                const inspectorsDoc = await db.collection('dormData').doc('inspectors').get();
+                if (inspectorsDoc.exists) {
+                    inspectorNames = inspectorsDoc.data().inspectorNames || inspectorNames;
+                }
+
+                const roomPropsDoc = await db.collection('dormData').doc('roomProperties').get();
+                if (roomPropsDoc.exists) {
+                    roomProperties = roomPropsDoc.data().roomProperties || {};
+                }
+
+                console.log('Data loaded from Firebase');
+            } catch (error) {
+                console.error('Error loading from Firebase:', error);
+                loadLocalData();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function loadLocalData() {
+            try {
+                inspections = JSON.parse(localStorage.getItem('dormInspections') || '[]');
+                scheduledRooms = JSON.parse(localStorage.getItem('weeklySchedule') || '[]');
+                inspectorNames = JSON.parse(localStorage.getItem('inspectorNames') || '[]') || inspectorNames;
+                roomProperties = JSON.parse(localStorage.getItem('roomProperties') || '{}');
+            } catch (e) {
+                console.error('Error loading local data:', e);
+            }
+        }
+
+        async function saveData() {
+            localStorage.setItem('dormInspections', JSON.stringify(inspections));
+            localStorage.setItem('weeklySchedule', JSON.stringify(scheduledRooms));
+            localStorage.setItem('inspectorNames', JSON.stringify(inspectorNames));
+            localStorage.setItem('roomProperties', JSON.stringify(roomProperties));
+
+            if (isConnected && db) {
+                try {
+                    await db.collection('dormData').doc('inspections').set({
+                        inspections: inspections,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    await db.collection('dormData').doc('schedule').set({
+                        scheduledRooms: scheduledRooms,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    await db.collection('dormData').doc('inspectors').set({
+                        inspectorNames: inspectorNames,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    await db.collection('dormData').doc('roomProperties').set({
+                        roomProperties: roomProperties,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (error) {
+                    console.error('Error saving to Firebase:', error);
+                }
+            }
+        }
+
+        // Tab Navigation
+        function showTab(tab) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+            const tabMap = { new: 0, schedule: 1, view: 2, reports: 3 };
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs[tabMap[tab]].classList.add('active');
+
+            document.getElementById(`${tab}-section`).classList.add('active');
+
+            if (tab === 'new' || tab === 'schedule') setupForm();
+            if (tab === 'view') loadInspectionsList();
+            if (tab === 'reports') generateReport();
+        }
+
+        function toggleRoomMode() {
+            updateRoomDropdown(true);
+        }
+
+        function setupForm() {
+            updateRoomDropdown();
+            setupRoomTiles();
+            updateInspectorDropdown();
+            setupInspectorNamePersistence();
+            loadSavedInspectorName();
+            updateScheduledRoomsDisplay();
+            updateAdminStats();
+
+            // Setup regular demerits
+            const container = document.getElementById('demerits-container');
+            container.innerHTML = '';
+            demerits.forEach((demerit, index) => {
+                const item = document.createElement('div');
+                item.className = 'demerit-item';
+                item.setAttribute('data-index', index);
+                item.setAttribute('data-type', 'regular');
+                item.innerHTML = `
+                    <div class="demerit-checkbox"></div>
+                    <div class="demerit-text">${demerit}</div>
+                `;
+                item.onclick = function() {
+                    this.classList.toggle('checked');
+                    updateScore();
+                };
+                container.appendChild(item);
+            });
+
+            // Setup auto-failure demerits
+            const autoContainer = document.getElementById('auto-failure-container');
+            autoContainer.innerHTML = '';
+            autoFailureDemerits.forEach((demerit, index) => {
+                const item = document.createElement('div');
+                item.className = 'demerit-item auto-failure';
+                item.setAttribute('data-index', index);
+                item.setAttribute('data-type', 'auto-failure');
+                item.innerHTML = `
+                    <div class="demerit-checkbox"></div>
+                    <div class="demerit-text">${demerit}</div>
+                `;
+                item.onclick = function() {
+                    this.classList.toggle('checked');
+                    updateScore();
+                };
+                autoContainer.appendChild(item);
+            });
+
+            updateScore();
+        }
+
+        function setupInspectorNamePersistence() {
+            var inspectorSelect = document.getElementById('inspectorName');
+            if (inspectorSelect) {
+                inspectorSelect.addEventListener('change', function () {
+                    saveInspectorName(this.value);
+                });
+            }
+        }
+
+        function loadSavedInspectorName() {
+            try {
+                var savedName = localStorage.getItem('inspectorName');
+                if (savedName) {
+                    var inspectorSelect = document.getElementById('inspectorName');
+                    if (inspectorSelect) {
+                        var optionExists = Array.from(inspectorSelect.options).some(function (option) {
+                            return option.value === savedName;
+                        });
+                        if (optionExists) {
+                            inspectorSelect.value = savedName;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading saved inspector name:', e);
+            }
+        }
+
+        function saveInspectorName(name) {
+            try {
+                if (name && name.trim()) {
+                    localStorage.setItem('inspectorName', name.trim());
+                }
+            } catch (e) {
+                console.error('Error saving inspector name:', e);
+            }
+        }
+
+        function updateScore() {
+            const regularChecked = document.querySelectorAll('.demerit-item[data-type="regular"].checked').length;
+            const autoFailureChecked = document.querySelectorAll('.demerit-item[data-type="auto-failure"].checked').length;
+            const totalScore = regularChecked + (autoFailureChecked * 4);
+            const status = totalScore >= 4 ? 'FAILED' : 'PASSED';
+
+            const scoreDisplay = document.getElementById('score-display');
+            scoreDisplay.querySelector('.score-number').textContent = totalScore;
+            scoreDisplay.querySelector('.score-label').textContent = status;
+            scoreDisplay.className = totalScore >= 4 ? 'score-card fail' : 'score-card';
+        }
+
+        function updateRoomDropdown(preserveSelection) {
+            const roomSelect = document.getElementById('roomNumber');
+            const scheduledMode = document.querySelector('input[name="roomMode"]:checked').value === 'scheduled';
+            const currentSelection = preserveSelection ? roomSelect.value : '';
+
+            roomSelect.innerHTML = '<option value="">Select Room Number</option>';
+
+            if (scheduledMode) {
+                if (scheduledRooms.length > 0) {
+                    scheduledRooms.sort((a, b) => parseInt(a) - parseInt(b));
+                    scheduledRooms.forEach(room => {
+                        const option = document.createElement('option');
+                        option.value = room;
+                        option.textContent = `Room ${room}`;
+                        roomSelect.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.textContent = 'No rooms scheduled';
+                    option.disabled = true;
+                    roomSelect.appendChild(option);
+                }
+            } else {
+                const group200 = document.createElement('optgroup');
+                group200.label = '200 Series';
+                for (let i = 201; i <= 299; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    group200.appendChild(option);
+                }
+                roomSelect.appendChild(group200);
+
+                const group300 = document.createElement('optgroup');
+                group300.label = '300 Series';
+                for (let i = 301; i <= 399; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    group300.appendChild(option);
+                }
+                roomSelect.appendChild(group300);
+            }
+
+            if (preserveSelection && currentSelection) {
+                roomSelect.value = currentSelection;
+            }
+        }
+
+        function updateInspectorDropdown() {
+            const select = document.getElementById('inspectorName');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">Select Inspector</option>';
+            inspectorNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+            if (currentValue) select.value = currentValue;
+        }
+
+        function setupRoomTiles() {
+            const container = document.getElementById('room-tiles-grid');
+            container.innerHTML = '';
+            for (let i = 201; i <= 299; i++) createRoomTile(container, i);
+            for (let i = 301; i <= 399; i++) createRoomTile(container, i);
+        }
+
+        function createRoomTile(container, roomNumber) {
+            const tile = document.createElement('div');
+            tile.className = 'room-tile';
+            tile.setAttribute('data-room', roomNumber);
+            
+            const props = roomProperties[roomNumber] || {};
+            
+            let html = `<div class="room-number">${roomNumber}</div>`;
+            
+            if (props.shift || props.gender) {
+                html += '<div class="room-badges">';
+                if (props.shift) {
+                    html += `<span class="room-badge shift">${props.shift}</span>`;
+                }
+                if (props.gender) {
+                    const genderClass = props.gender === 'Male' ? 'gender-male' : 'gender-female';
+                    const genderIcon = props.gender === 'Male' ? '👨' : '👩';
+                    html += `<span class="room-badge ${genderClass}">${genderIcon}</span>`;
+                }
+                html += '</div>';
+            }
+            
+            tile.innerHTML = html;
+            tile.onclick = () => toggleRoomTile(roomNumber);
+            container.appendChild(tile);
+        }
+
+        function toggleRoomTile(roomNumber) {
+            const tile = document.querySelector(`.room-tile[data-room="${roomNumber}"]`);
+            const roomStr = String(roomNumber);
+            if (selectedRoomTiles.has(roomStr)) {
+                selectedRoomTiles.delete(roomStr);
+                tile.classList.remove('selected');
+            } else {
+                selectedRoomTiles.add(roomStr);
+                tile.classList.add('selected');
+            }
+        }
+
+        function selectAllRooms() {
+            selectedRoomTiles.clear();
+            document.querySelectorAll('.room-tile').forEach(tile => {
+                const roomNumber = tile.getAttribute('data-room');
+                selectedRoomTiles.add(roomNumber);
+                tile.classList.add('selected');
+            });
+        }
+
+        function clearAllSelectedRooms() {
+            selectedRoomTiles.clear();
+            document.querySelectorAll('.room-tile').forEach(tile => {
+                tile.classList.remove('selected');
+            });
+        }
+
+        async function addSelectedRoomsToSchedule() {
+            if (selectedRoomTiles.size === 0) {
+                alert('No rooms selected');
+                return;
+            }
+            let added = 0;
+            selectedRoomTiles.forEach(room => {
+                if (!scheduledRooms.includes(room)) {
+                    scheduledRooms.push(room);
+                    added++;
+                }
+            });
+            if (added > 0) {
+                updateScheduledRoomsDisplay();
+                updateRoomDropdown();
+                clearAllSelectedRooms();
+                await saveData();
+                alert(`Added ${added} room${added > 1 ? 's' : ''} to schedule!`);
+            } else {
+                alert('All selected rooms are already scheduled');
+            }
+        }
+
+        function updateScheduledRoomsDisplay() {
+            const container = document.getElementById('scheduled-rooms');
+            if (scheduledRooms.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">No rooms scheduled yet</p>';
+                return;
+            }
+
+            const sorted = scheduledRooms.slice().sort((a, b) => parseInt(a) - parseInt(b));
+            container.innerHTML = sorted.map(room => {
+                const props = roomProperties[room] || {};
+                let badges = '';
+                
+                if (props.shift) {
+                    badges += `<span style="padding: 4px 8px; background: rgba(139, 92, 246, 0.2); border-radius: 6px; font-size: 11px; font-weight: 700; color: var(--secondary);">${props.shift}</span>`;
+                }
+                if (props.gender) {
+                    const genderColor = props.gender === 'Male' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(236, 72, 153, 0.2)';
+                    const genderTextColor = props.gender === 'Male' ? '#3b82f6' : 'var(--accent)';
+                    const genderIcon = props.gender === 'Male' ? '👨' : '👩';
+                    badges += `<span style="padding: 4px 8px; background: ${genderColor}; border-radius: 6px; font-size: 11px; font-weight: 700; color: ${genderTextColor}; margin-left: 4px;">${genderIcon} ${props.gender}</span>`;
+                }
+
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface-light); border-radius: 8px; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-weight: 600;">Room ${room}</span>
+                            ${badges}
+                        </div>
+                        <button onclick="removeRoomFromSchedule('${room}')" style="background: var(--error); color: white; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer;">×</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function removeRoomFromSchedule(roomNumber) {
+            const index = scheduledRooms.indexOf(String(roomNumber));
+            if (index > -1) {
+                scheduledRooms.splice(index, 1);
+                updateScheduledRoomsDisplay();
+                updateRoomDropdown();
+                await saveData();
+            }
+        }
+
+        async function clearAllScheduledRooms() {
+            scheduledRooms = [];
+            updateScheduledRoomsDisplay();
+            updateRoomDropdown();
+            await saveData();
+        }
+
+        async function saveSchedule() {
+            await saveData();
+            alert('Schedule saved successfully!');
+        }
+
+        async function saveInspection() {
+            if (isLoading) return;
+
+            const roomNumber = document.getElementById('roomNumber').value;
+            const inspectorName = document.getElementById('inspectorName').value;
+            const notes = document.getElementById('notes').value;
+
+            if (!roomNumber) {
+                alert('Please select a room number');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const selectedDemerits = [];
+                const selectedAutoFailure = [];
+                
+                document.querySelectorAll('.demerit-item[data-type="regular"].checked').forEach(item => {
+                    const index = parseInt(item.getAttribute('data-index'));
+                    selectedDemerits.push(demerits[index]);
+                });
+
+                document.querySelectorAll('.demerit-item[data-type="auto-failure"].checked').forEach(item => {
+                    const index = parseInt(item.getAttribute('data-index'));
+                    selectedAutoFailure.push(autoFailureDemerits[index]);
+                });
+
+                const regularScore = selectedDemerits.length;
+                const autoFailureScore = selectedAutoFailure.length * 4;
+                const totalScore = regularScore + autoFailureScore;
+
+                const inspection = {
+                    id: editingId || Date.now(),
+                    roomNumber,
+                    inspectionDate: new Date().toISOString().split('T')[0],
+                    inspectorName,
+                    demerits: selectedDemerits,
+                    autoFailureDemerits: selectedAutoFailure,
+                    regularScore,
+                    autoFailureScore,
+                    score: totalScore,
+                    status: totalScore >= 4 ? 'FAILED' : 'PASSED',
+                    notes,
+                    timestamp: new Date().toISOString()
+                };
+
+                if (editingId) {
+                    const index = inspections.findIndex(i => i.id === editingId);
+                    if (index !== -1) inspections[index] = inspection;
+                } else {
+                    const roomIndex = scheduledRooms.indexOf(String(roomNumber));
+                    if (roomIndex > -1) {
+                        scheduledRooms.splice(roomIndex, 1);
+                        updateScheduledRoomsDisplay();
+                        updateRoomDropdown();
+                    }
+                    inspections.push(inspection);
+                }
+
+                await saveData();
+                resetForm();
+                
+                // Show success message
+                showMessage('Inspection saved successfully!', 'success');
+            } catch (error) {
+                console.error('Error saving:', error);
+                showError('Failed to save inspection');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showMessage(text, type) {
+            var scoreDisplay = document.getElementById('score-display');
+            var originalHTML = scoreDisplay.innerHTML;
+            var originalClass = scoreDisplay.className;
+
+            if (type === 'error') {
+                scoreDisplay.className = 'score-card fail';
+                scoreDisplay.innerHTML = `
+                    <div class="score-number" style="font-size: 24px;">❌</div>
+                    <div class="score-label">${text}</div>
+                `;
+            } else {
+                scoreDisplay.className = 'score-card';
+                scoreDisplay.innerHTML = `
+                    <div class="score-number" style="font-size: 24px;">✅</div>
+                    <div class="score-label">${text}</div>
+                `;
+            }
+
+            setTimeout(function () {
+                scoreDisplay.innerHTML = originalHTML;
+                scoreDisplay.className = originalClass;
+            }, 3000);
+        }
+
+        function resetForm() {
+            editingId = null;
+            document.getElementById('form-title').textContent = 'New Inspection';
+            document.getElementById('cancel-btn').style.display = 'none';
+            document.getElementById('roomNumber').value = '';
+            // Don't reset inspector name - let it persist
+            // document.getElementById('inspectorName').value = '';
+            document.getElementById('notes').value = '';
+            document.querySelectorAll('.demerit-item').forEach(item => item.classList.remove('checked'));
+            updateScore();
+        }
+
+        function editInspection(id) {
+            const inspection = inspections.find(i => i.id === id);
+            if (!inspection) return;
+
+            editingId = id;
+            document.getElementById('form-title').textContent = 'Edit Inspection';
+            document.getElementById('cancel-btn').style.display = 'block';
+            document.getElementById('roomNumber').value = inspection.roomNumber;
+            document.getElementById('inspectorName').value = inspection.inspectorName;
+            document.getElementById('notes').value = inspection.notes;
+
+            document.querySelectorAll('.demerit-item').forEach(item => item.classList.remove('checked'));
+
+            if (inspection.demerits) {
+                inspection.demerits.forEach(demerit => {
+                    const index = demerits.indexOf(demerit);
+                    if (index !== -1) {
+                        const item = document.querySelector(`[data-type="regular"][data-index="${index}"]`);
+                        if (item) item.classList.add('checked');
+                    }
+                });
+            }
+
+            if (inspection.autoFailureDemerits) {
+                inspection.autoFailureDemerits.forEach(demerit => {
+                    const index = autoFailureDemerits.indexOf(demerit);
+                    if (index !== -1) {
+                        const item = document.querySelector(`[data-type="auto-failure"][data-index="${index}"]`);
+                        if (item) item.classList.add('checked');
+                    }
+                });
+            }
+
+            updateScore();
+            showTab('new');
+        }
+
+        function cancelEdit() {
+            resetForm();
+        }
+
+        async function deleteInspection(id) {
+            const index = inspections.findIndex(i => i.id === id);
+            if (index !== -1) {
+                inspections.splice(index, 1);
+                await saveData();
+                loadInspectionsList();
+            }
+        }
+
+        async function deleteAllInspections() {
+            if (inspections.length === 0) {
+                console.log('No inspections to delete');
+                return;
+            }
+
+            var button = event.target;
+            var clickCount = parseInt(button.getAttribute('data-click-count') || '0');
+
+            clickCount++;
+            button.setAttribute('data-click-count', clickCount);
+
+            var originalText = button.textContent;
+
+            if (clickCount === 1) {
+                button.textContent = `Click 2 More Times (${inspections.length} records)`;
+                button.style.background = 'linear-gradient(135deg, var(--warning), #d97706)';
+
+                setTimeout(function () {
+                    button.setAttribute('data-click-count', '0');
+                    button.textContent = originalText;
+                    button.style.background = 'linear-gradient(135deg, var(--error), #dc2626)';
+                }, 5000);
+
+            } else if (clickCount === 2) {
+                button.textContent = 'FINAL WARNING - Click Once More';
+                button.style.background = 'linear-gradient(135deg, #dc2626, #991b1b)';
+
+            } else if (clickCount >= 3) {
+                try {
+                    inspections = [];
+                    await saveData();
+                    loadInspectionsList();
+
+                    button.setAttribute('data-click-count', '0');
+                    button.textContent = originalText;
+                    button.style.background = 'linear-gradient(135deg, var(--error), #dc2626)';
+
+                    console.log('All inspections deleted successfully');
+                } catch (error) {
+                    console.error('Error deleting all inspections:', error);
+                    showError('Failed to delete all inspections. Please try again.');
+                }
+            }
+        }
+
+        function loadInspectionsList() {
+            const list = document.getElementById('inspections-list');
+            if (inspections.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No inspections recorded yet</p>';
+                return;
+            }
+
+            const sorted = inspections.slice().sort((a, b) => new Date(b.inspectionDate) - new Date(a.inspectionDate));
+            list.innerHTML = sorted.map(inspection => {
+                const props = roomProperties[inspection.roomNumber] || {};
+                let badges = '';
+                
+                if (props.shift) {
+                    badges += `<span style="padding: 4px 8px; background: rgba(139, 92, 246, 0.2); border-radius: 6px; font-size: 10px; font-weight: 700; color: var(--secondary); margin-left: 8px;">${props.shift}</span>`;
+                }
+                if (props.gender) {
+                    const genderColor = props.gender === 'Male' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(236, 72, 153, 0.2)';
+                    const genderTextColor = props.gender === 'Male' ? '#3b82f6' : 'var(--accent)';
+                    const genderIcon = props.gender === 'Male' ? '👨' : '👩';
+                    badges += `<span style="padding: 4px 8px; background: ${genderColor}; border-radius: 6px; font-size: 10px; font-weight: 700; color: ${genderTextColor}; margin-left: 4px;">${genderIcon}</span>`;
+                }
+
+                return `
+                    <div class="inspection-card ${inspection.status.toLowerCase()}">
+                        <div class="inspection-header">
+                            <div>
+                                <h3 class="inspection-title">Room ${inspection.roomNumber}${badges}</h3>
+                            </div>
+                            <span class="inspection-badge ${inspection.status.toLowerCase()}">${inspection.status}</span>
+                        </div>
+                        <div style="display: grid; gap: 8px; font-size: 14px; color: var(--text-secondary);">
+                            <div><strong>Date:</strong> ${new Date(inspection.inspectionDate).toLocaleDateString()}</div>
+                            <div><strong>Inspector:</strong> ${inspection.inspectorName || 'Not specified'}</div>
+                            <div><strong>Score:</strong> ${inspection.score} points</div>
+                            ${inspection.demerits && inspection.demerits.length > 0 ? `<div><strong>Violations:</strong> ${inspection.demerits.join(', ')}</div>` : ''}
+                            ${inspection.autoFailureDemerits && inspection.autoFailureDemerits.length > 0 ? `<div><strong>Auto-Fail:</strong> ${inspection.autoFailureDemerits.join(', ')}</div>` : ''}
+                            ${inspection.notes ? `<div><strong>Notes:</strong> ${inspection.notes}</div>` : ''}
+                        </div>
+                        <div class="inspection-actions">
+                            <button class="btn btn-warning btn-small" onclick="editInspection(${inspection.id})">✏️ Edit</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteInspection(${inspection.id})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function generateReport() {
+            const content = document.getElementById('report-content');
+            if (inspections.length === 0) {
+                content.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No data available</p>';
+                return;
+            }
+
+            const total = inspections.length;
+            const passed = inspections.filter(i => i.status === 'PASSED').length;
+            const failed = inspections.filter(i => i.status === 'FAILED').length;
+            const passRate = ((passed / total) * 100).toFixed(1);
+
+            content.innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card highlight">
+                        <div class="stat-number">${total}</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: var(--success);">${passed}</div>
+                        <div class="stat-label">Passed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: var(--error);">${failed}</div>
+                        <div class="stat-label">Failed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${passRate}%</div>
+                        <div class="stat-label">Pass Rate</div>
+                    </div>
+                </div>
+                <div style="display: grid; gap: 12px; margin-top: 24px;">
+                    <button class="btn btn-primary" onclick="window.print()">🖨️ Print Report</button>
+                    <button class="btn btn-success" onclick="exportToCSV()">📊 Export CSV</button>
+                    <button class="btn btn-secondary" onclick="exportToExcel()">📋 Export Excel</button>
+                </div>
+            `;
+        }
+
+        function exportToCSV() {
+            if (inspections.length === 0) return;
+
+            const headers = ['Room Number', 'Shift', 'Gender', 'Date', 'Inspector', 'Regular Score', 'Auto-Failure Score', 'Total Score', 'Status', 'Notes'];
+            autoFailureDemerits.forEach(d => headers.push(d + ' (AUTO-FAIL)'));
+            demerits.forEach(d => headers.push(d));
+
+            let csv = headers.join(',') + '\n';
+
+            inspections.forEach(inspection => {
+                const props = roomProperties[inspection.roomNumber] || {};
+                const row = [
+                    inspection.roomNumber,
+                    props.shift || '',
+                    props.gender || '',
+                    inspection.inspectionDate,
+                    inspection.inspectorName || '',
+                    inspection.regularScore || 0,
+                    inspection.autoFailureScore || 0,
+                    inspection.score,
+                    inspection.status,
+                    '"' + (inspection.notes || '').replace(/"/g, '""') + '"'
+                ];
+
+                autoFailureDemerits.forEach(demerit => {
+                    row.push(inspection.autoFailureDemerits && inspection.autoFailureDemerits.includes(demerit) ? 'X' : '');
+                });
+
+                demerits.forEach(demerit => {
+                    row.push(inspection.demerits && inspection.demerits.includes(demerit) ? 'X' : '');
+                });
+
+                csv += row.join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dorm-inspection-report-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportToExcel() {
+            if (inspections.length === 0) {
+                console.log('No data to export');
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+
+            const total = inspections.length;
+            const passed = inspections.filter(i => i.status === 'PASSED').length;
+            const failed = inspections.filter(i => i.status === 'FAILED').length;
+            const passRate = ((passed / total) * 100).toFixed(1);
+
+            const summaryData = [
+                ['DORM INSPECTION SUMMARY REPORT'],
+                ['Generated:', new Date().toLocaleDateString()],
+                [''],
+                ['STATISTICS'],
+                ['Total Inspections:', total],
+                ['Passed:', passed],
+                ['Failed:', failed],
+                ['Pass Rate:', passRate + '%'],
+                [''],
+                ['TOP VIOLATIONS'],
+            ];
+
+            const demeritCounts = {};
+            inspections.forEach(inspection => {
+                if (inspection.demerits) {
+                    inspection.demerits.forEach(demerit => {
+                        demeritCounts[demerit] = (demeritCounts[demerit] || 0) + 1;
+                    });
+                }
+                if (inspection.autoFailureDemerits) {
+                    inspection.autoFailureDemerits.forEach(demerit => {
+                        demeritCounts[demerit] = (demeritCounts[demerit] || 0) + 1;
+                    });
+                }
+            });
+
+            const sortedDemerits = Object.keys(demeritCounts)
+                .sort((a, b) => demeritCounts[b] - demeritCounts[a])
+                .slice(0, 5);
+
+            sortedDemerits.forEach((demerit, index) => {
+                summaryData.push([`${index + 1}. ${demerit}`, demeritCounts[demerit]]);
+            });
+
+            const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+
+            const matrixHeaders = ['Date', 'Room #', 'Shift', 'Gender'];
+
+            autoFailureDemerits.forEach(demerit => {
+                matrixHeaders.push(demerit + ' (AUTO-FAIL)');
+            });
+
+            demerits.forEach(demerit => {
+                matrixHeaders.push(demerit);
+            });
+
+            matrixHeaders.push('Pass/Fail', 'Notes', 'Inspector');
+
+            const matrixData = [matrixHeaders];
+
+            const sortedInspections = inspections.slice().sort((a, b) => {
+                const dateCompare = new Date(a.inspectionDate) - new Date(b.inspectionDate);
+                if (dateCompare !== 0) return dateCompare;
+                return parseInt(a.roomNumber) - parseInt(b.roomNumber);
+            });
+
+            sortedInspections.forEach(inspection => {
+                const props = roomProperties[inspection.roomNumber] || {};
+                const row = [inspection.inspectionDate, inspection.roomNumber, props.shift || '', props.gender || ''];
+
+                autoFailureDemerits.forEach(demerit => {
+                    const hasViolation = inspection.autoFailureDemerits &&
+                        inspection.autoFailureDemerits.includes(demerit);
+                    row.push(hasViolation ? 'X' : '');
+                });
+
+                demerits.forEach(demerit => {
+                    const hasViolation = inspection.demerits &&
+                        inspection.demerits.includes(demerit);
+                    row.push(hasViolation ? 'X' : '');
+                });
+
+                row.push(
+                    inspection.status,
+                    inspection.notes || '',
+                    inspection.inspectorName || ''
+                );
+
+                matrixData.push(row);
+            });
+
+            const matrixWs = XLSX.utils.aoa_to_sheet(matrixData);
+
+            const colWidths = [
+                { wch: 10 }, // Date
+                { wch: 7 },  // Room #
+                { wch: 6 },  // Shift
+                { wch: 8 },  // Gender
+                ...autoFailureDemerits.map(() => ({ wch: 5 })),
+                ...demerits.map(() => ({ wch: 4 })),
+                { wch: 6 },  // Pass/Fail
+                { wch: 20 }, // Notes
+                { wch: 10 }  // Inspector
+            ];
+            matrixWs['!cols'] = colWidths;
+
+            matrixWs['!printSetup'] = {
+                orientation: 'landscape',
+                paperSize: 1,
+                scale: 75,
+                fitToWidth: 1,
+                fitToHeight: 0,
+                horizontalDpi: 300,
+                verticalDpi: 300
+            };
+
+            matrixWs['!margins'] = {
+                left: 0.5,
+                right: 0.5,
+                top: 0.5,
+                bottom: 0.5,
+                header: 0.3,
+                footer: 0.3
+            };
+
+            const headerRange = XLSX.utils.decode_range(matrixWs['!ref']);
+
+            for (let row = 0; row <= headerRange.e.r; row++) {
+                for (let col = 0; col <= headerRange.e.c; col++) {
+                    const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+                    if (!matrixWs[cellRef]) {
+                        matrixWs[cellRef] = { v: "", t: "s" };
+                    }
+
+                    matrixWs[cellRef].s = {
+                        border: {
+                            top: { style: "thin", color: { rgb: "000000" } },
+                            bottom: { style: "thin", color: { rgb: "000000" } },
+                            left: { style: "thin", color: { rgb: "000000" } },
+                            right: { style: "thin", color: { rgb: "000000" } }
+                        },
+                        alignment: { horizontal: "center", vertical: "center" },
+                        font: { size: 9 }
+                    };
+                }
+            }
+
+            for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+                const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
+
+                let headerColor = "2D3748"; // Default dark blue
+                if (col >= 4 && col < 4 + autoFailureDemerits.length) {
+                    headerColor = "C53030"; // Red for auto-failure columns
+                } else if (col >= 4 + autoFailureDemerits.length && col < 4 + autoFailureDemerits.length + demerits.length) {
+                    headerColor = "D69E2E"; // Orange for regular demerit columns
+                }
+
+                matrixWs[cellRef].s = {
+                    font: { bold: true, color: { rgb: "FFFFFF" }, size: 8 },
+                    fill: { fgColor: { rgb: headerColor } },
+                    alignment: {
+                        horizontal: "center",
+                        vertical: "center",
+                        textRotation: col >= 4 && col < 4 + autoFailureDemerits.length + demerits.length ? 90 : 0
+                    },
+                    border: {
+                        top: { style: "thick", color: { rgb: "000000" } },
+                        bottom: { style: "thick", color: { rgb: "000000" } },
+                        left: { style: "thin", color: { rgb: "000000" } },
+                        right: { style: "thin", color: { rgb: "000000" } }
+                    }
+                };
+            }
+
+            const autoFailStartCol = 4; // After Date, Room #, Shift, Gender
+            const autoFailEndCol = autoFailStartCol + autoFailureDemerits.length - 1;
+            const regularStartCol = autoFailEndCol + 1;
+            const regularEndCol = regularStartCol + demerits.length - 1;
+            const passFailCol = regularEndCol + 1;
+
+            for (let row = 1; row <= headerRange.e.r; row++) {
+                const isEvenRow = row % 2 === 0;
+                const rowColor = isEvenRow ? "F7FAFC" : "FFFFFF";
+
+                for (let col = 0; col <= headerRange.e.c; col++) {
+                    const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+                    if (!matrixWs[cellRef]) continue;
+
+                    let cellStyle = {
+                        border: {
+                            top: { style: "thin", color: { rgb: "E2E8F0" } },
+                            bottom: { style: "thin", color: { rgb: "E2E8F0" } },
+                            left: { style: "thin", color: { rgb: "E2E8F0" } },
+                            right: { style: "thin", color: { rgb: "E2E8F0" } }
+                        },
+                        alignment: { horizontal: "center", vertical: "center" },
+                        font: { size: 9 },
+                        fill: { fgColor: { rgb: rowColor } }
+                    };
+
+                    if (matrixWs[cellRef].v === 'X') {
+                        if (col >= autoFailStartCol && col <= autoFailEndCol) {
+                            cellStyle.font = { bold: true, color: { rgb: "FFFFFF" }, size: 12 };
+                            cellStyle.fill = { fgColor: { rgb: "E53E3E" } };
+                        } else if (col >= regularStartCol && col <= regularEndCol) {
+                            cellStyle.font = { bold: true, color: { rgb: "FFFFFF" }, size: 11 };
+                            cellStyle.fill = { fgColor: { rgb: "ED8936" } };
+                        }
+                    }
+
+                    if (col === passFailCol) {
+                        cellStyle.font = { bold: true, size: 9 };
+                        if (matrixWs[cellRef].v === 'FAILED') {
+                            cellStyle.font.color = { rgb: "E53E3E" };
+                            cellStyle.fill = { fgColor: { rgb: "FED7D7" } };
+                        } else if (matrixWs[cellRef].v === 'PASSED') {
+                            cellStyle.font.color = { rgb: "38A169" };
+                            cellStyle.fill = { fgColor: { rgb: "C6F6D5" } };
+                        }
+                    }
+
+                    if (col >= passFailCol + 1) {
+                        cellStyle.alignment.horizontal = "left";
+                        cellStyle.font.size = 8;
+                    }
+
+                    matrixWs[cellRef].s = cellStyle;
+                }
+            }
+
+            const rowHeights = [];
+            for (let i = 0; i <= headerRange.e.r; i++) {
+                rowHeights.push({ hpt: i === 0 ? 40 : 18 });
+            }
+            matrixWs['!rows'] = rowHeights;
+
+            matrixWs['!printTitles'] = '$1:$1';
+
+            XLSX.utils.book_append_sheet(wb, matrixWs, 'Inspection Matrix');
+
+            const rawData = [
+                ['Room Number', 'Shift', 'Gender', 'Date', 'Inspector', 'Regular Score', 'Auto-Failure Score',
+                    'Total Score', 'Status', 'Regular Violations', 'Auto-Failure Violations', 'Notes']
+            ];
+
+            inspections.forEach(inspection => {
+                const props = roomProperties[inspection.roomNumber] || {};
+                rawData.push([
+                    inspection.roomNumber,
+                    props.shift || '',
+                    props.gender || '',
+                    inspection.inspectionDate,
+                    inspection.inspectorName || '',
+                    inspection.regularScore || 0,
+                    inspection.autoFailureScore || 0,
+                    inspection.score,
+                    inspection.status,
+                    inspection.demerits ? inspection.demerits.join('; ') : '',
+                    inspection.autoFailureDemerits ? inspection.autoFailureDemerits.join('; ') : '',
+                    inspection.notes || ''
+                ]);
+            });
+
+            const rawWs = XLSX.utils.aoa_to_sheet(rawData);
+
+            rawWs['!cols'] = [
+                { wch: 12 }, { wch: 6 }, { wch: 8 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 },
+                { wch: 12 }, { wch: 10 }, { wch: 30 }, { wch: 30 }, { wch: 30 }
+            ];
+
+            XLSX.utils.book_append_sheet(wb, rawWs, 'Raw Data');
+
+            const fileName = `dorm-inspection-report-${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            console.log('Excel report (.xlsx) downloaded successfully');
+        }
+
+        // Admin Panel Functions
+        function setupAdminPanel() {
+            document.getElementById('main-title').addEventListener('click', handleTitleClick);
+        }
+
+        function handleTitleClick() {
+            titleClickCount++;
+            if (titleClickTimer) clearTimeout(titleClickTimer);
+            titleClickTimer = setTimeout(() => titleClickCount = 0, 2000);
+            if (titleClickCount >= 5) {
+                showAdminPanel();
+                titleClickCount = 0;
+            }
+        }
+
+        function showAdminPanel() {
+            const panel = document.getElementById('admin-panel');
+            panel.classList.add('active');
+            updateAdminStats();
+            panel.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('admin-panel').classList.remove('active');
+        }
+
+        function updateAdminStats() {
+            document.getElementById('admin-total-inspections').textContent = inspections.length;
+            document.getElementById('admin-scheduled-rooms').textContent = scheduledRooms.length;
+            
+            var statusElement = document.getElementById('admin-connection-status');
+            statusElement.textContent = isConnected ? '🟢' : '🔴';
+            statusElement.style.color = isConnected ? 'var(--success)' : 'var(--error)';
+
+            var dataSize = JSON.stringify({ inspections: inspections, scheduledRooms: scheduledRooms }).length;
+            var sizeKB = (dataSize / 1024).toFixed(1);
+            document.getElementById('admin-data-size').textContent = sizeKB + 'KB';
+            
+            document.getElementById('current-inspectors').textContent = inspectorNames.join(', ');
+            
+            const configuredRoomsCount = Object.keys(roomProperties).length;
+            const configuredElement = document.getElementById('configured-rooms-count');
+            if (configuredElement) {
+                configuredElement.textContent = configuredRoomsCount;
+            }
+        }
+
+        function logAdmin(message) {
+            const log = document.getElementById('admin-log');
+            if (log) {
+                log.innerHTML += `[${new Date().toLocaleTimeString()}] ${message}<br>`;
+                log.scrollTop = log.scrollHeight;
+            }
+        }
+
+        async function forceDataSync() {
+            logAdmin('Forcing sync...');
+            try {
+                await saveData();
+                await loadData();
+                updateAdminStats();
+                logAdmin('✓ Sync completed');
+            } catch (error) {
+                logAdmin('✗ Sync failed: ' + error.message);
+            }
+        }
+
+        function exportAllData() {
+            const data = {
+                inspections,
+                scheduledRooms,
+                inspectorNames,
+                roomProperties,
+                exportDate: new Date().toISOString(),
+                version: '2.1'
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dorm-inspection-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            logAdmin('✓ Data exported (including room properties)');
+        }
+
+        function importDataPrompt() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            if (data.inspections && data.scheduledRooms) {
+                                if (confirm('Replace all data?')) {
+                                    inspections = data.inspections;
+                                    scheduledRooms = data.scheduledRooms;
+                                    if (data.inspectorNames) inspectorNames = data.inspectorNames;
+                                    if (data.roomProperties) roomProperties = data.roomProperties;
+                                    saveData();
+                                    setupForm();
+                                    updateAdminStats();
+                                    logAdmin('✓ Data imported (including room properties)');
+                                }
+                            }
+                        } catch (error) {
+                            logAdmin('✗ Import failed: ' + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        async function resetAllData() {
+            var button = event.target;
+            var confirmCount = parseInt(button.getAttribute('data-confirm-count') || '0');
+
+            if (confirmCount === 0) {
+                button.textContent = 'Click 2 more times to confirm';
+                button.style.background = 'linear-gradient(145deg, var(--warning), #d97706)';
+                button.setAttribute('data-confirm-count', '1');
+
+                setTimeout(function () {
+                    button.textContent = '⚠️ Reset All Data';
+                    button.style.background = 'linear-gradient(145deg, var(--error), #dc2626)';
+                    button.setAttribute('data-confirm-count', '0');
+                }, 5000);
+
+            } else if (confirmCount === 1) {
+                button.textContent = 'FINAL WARNING - Click once more';
+                button.style.background = 'linear-gradient(145deg, #dc2626, #991b1b)';
+                button.setAttribute('data-confirm-count', '2');
+
+            } else {
+                inspections = [];
+                scheduledRooms = [];
+                await saveData();
+                setupForm();
+                updateAdminStats();
+
+                button.textContent = '⚠️ Reset All Data';
+                button.style.background = 'linear-gradient(145deg, var(--error), #dc2626)';
+                button.setAttribute('data-confirm-count', '0');
+
+                logAdmin('⚠️ ALL DATA RESET');
+            }
+        }
+
+        function manageInspectors() {
+            const current = inspectorNames.join(', ');
+            const newList = prompt('Edit inspector names (comma-separated):', current);
+            if (newList) {
+                const names = newList.split(',').map(n => n.trim()).filter(n => n.length > 0);
+                if (names.length > 0) {
+                    inspectorNames = names;
+                    updateInspectorDropdown();
+                    updateAdminStats();
+                    saveData();
+                    logAdmin('✓ Inspector list updated');
+                }
+            }
+        }
+
+        function resetInspectorNames() {
+            if (confirm('Reset to default inspector names?')) {
+                inspectorNames = ['Hoskins', 'Troope', 'Smith', 'Cherry', 'Avila', 'Young', 'Grier'];
+                updateInspectorDropdown();
+                updateAdminStats();
+                saveData();
+                logAdmin('✓ Names reset to default');
+            }
+        }
+
+        function generateInspectorAnalytics() {
+            if (inspections.length === 0) {
+                logAdmin('No inspection data available for analytics');
+                return;
+            }
+
+            logAdmin('Generating inspector performance report...');
+
+            var inspectorStats = {};
+
+            inspections.forEach(function (inspection) {
+                var inspector = inspection.inspectorName || 'Unknown';
+
+                if (!inspectorStats[inspector]) {
+                    inspectorStats[inspector] = {
+                        totalInspections: 0,
+                        failedInspections: 0,
+                        passedInspections: 0,
+                        totalScore: 0,
+                        regularDemerits: 0,
+                        autoFailureDemerits: 0,
+                        roomsInspected: new Set()
+                    };
+                }
+
+                var stats = inspectorStats[inspector];
+                stats.totalInspections++;
+                stats.totalScore += inspection.score;
+                stats.roomsInspected.add(inspection.roomNumber);
+
+                if (inspection.status === 'FAILED') {
+                    stats.failedInspections++;
+                } else {
+                    stats.passedInspections++;
+                }
+
+                if (inspection.demerits) {
+                    stats.regularDemerits += inspection.demerits.length;
+                }
+
+                if (inspection.autoFailureDemerits) {
+                    stats.autoFailureDemerits += inspection.autoFailureDemerits.length;
+                }
+            });
+
+            var html = '<h4 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text-primary);">👥 Inspector Performance Analysis</h4>';
+
+            var sortedInspectors = Object.keys(inspectorStats).sort(function (a, b) {
+                return inspectorStats[b].totalInspections - inspectorStats[a].totalInspections;
+            });
+
+            sortedInspectors.forEach(function (inspector) {
+                var stats = inspectorStats[inspector];
+                var failureRate = ((stats.failedInspections / stats.totalInspections) * 100).toFixed(1);
+                var avgScore = (stats.totalScore / stats.totalInspections).toFixed(1);
+                var uniqueRooms = stats.roomsInspected.size;
+
+                var performanceColor = failureRate > 30 ? 'var(--error)' : failureRate > 15 ? 'var(--warning)' : 'var(--success)';
+
+                html += '<div style="background: var(--surface-light); border-left: 4px solid ' + performanceColor + '; border-radius: 8px; padding: 16px; margin: 12px 0;">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">';
+                html += '<h5 style="color: var(--text-primary); margin: 0; font-size: 15px; font-weight: 700;">' + inspector + '</h5>';
+                html += '<span style="background: ' + performanceColor + '; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">' + failureRate + '% Failure Rate</span>';
+                html += '</div>';
+
+                html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; color: var(--text-secondary);">';
+                html += '<div>📊 Total: <strong>' + stats.totalInspections + '</strong></div>';
+                html += '<div>🏠 Rooms: <strong>' + uniqueRooms + '</strong></div>';
+                html += '<div>✅ Passed: <strong>' + stats.passedInspections + '</strong></div>';
+                html += '<div>❌ Failed: <strong>' + stats.failedInspections + '</strong></div>';
+                html += '<div>📈 Avg Score: <strong>' + avgScore + '</strong></div>';
+                html += '<div>⚠️ Auto-Fails: <strong>' + stats.autoFailureDemerits + '</strong></div>';
+                html += '</div>';
+                html += '</div>';
+            });
+
+            var totalInspections = inspections.length;
+            var totalFailed = inspections.filter(function (i) { return i.status === 'FAILED'; }).length;
+            var overallFailureRate = ((totalFailed / totalInspections) * 100).toFixed(1);
+
+            html += '<div style="margin-top: 20px; padding: 16px; background: var(--surface); border-radius: 12px; border: 2px solid var(--primary);">';
+            html += '<h5 style="color: var(--text-primary); margin: 0 0 12px 0; font-weight: 700;">📈 System-Wide Statistics</h5>';
+            html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">';
+            html += '<div>Total Inspections: <strong>' + totalInspections + '</strong></div>';
+            html += '<div>Overall Failure: <strong>' + overallFailureRate + '%</strong></div>';
+            html += '<div>Active Inspectors: <strong>' + sortedInspectors.length + '</strong></div>';
+            html += '<div>Avg per Inspector: <strong>' + (totalInspections / sortedInspectors.length).toFixed(1) + '</strong></div>';
+            html += '</div>';
+            html += '</div>';
+
+            document.getElementById('analytics-content').innerHTML = html;
+            document.getElementById('analytics-display').style.display = 'block';
+            logAdmin('✓ Inspector analytics generated for ' + sortedInspectors.length + ' inspectors');
+        }
+
+        function generateDemeritTrends() {
+            if (inspections.length === 0) {
+                logAdmin('No inspection data available for demerit analysis');
+                return;
+            }
+
+            logAdmin('Generating demerit frequency analysis...');
+
+            var demeritCounts = {};
+            var totalViolations = 0;
+
+            inspections.forEach(function (inspection) {
+                if (inspection.demerits) {
+                    inspection.demerits.forEach(function (demerit) {
+                        demeritCounts[demerit] = (demeritCounts[demerit] || 0) + 1;
+                        totalViolations++;
+                    });
+                }
+
+                if (inspection.autoFailureDemerits) {
+                    inspection.autoFailureDemerits.forEach(function (demerit) {
+                        demeritCounts[demerit] = (demeritCounts[demerit] || 0) + 1;
+                        totalViolations++;
+                    });
+                }
+            });
+
+            var sortedDemerits = Object.keys(demeritCounts).sort(function (a, b) {
+                return demeritCounts[b] - demeritCounts[a];
+            });
+
+            var html = '<h4 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text-primary);">📊 Demerit Frequency Analysis</h4>';
+            html += '<div style="margin-bottom: 20px;">';
+            html += '<h5 style="color: var(--text-secondary); margin-bottom: 12px; font-size: 14px; font-weight: 600;">🔥 Most Common Violations</h5>';
+
+            sortedDemerits.slice(0, 10).forEach(function (demerit, index) {
+                var count = demeritCounts[demerit];
+                var percentage = ((count / totalViolations) * 100).toFixed(1);
+                var isAutoFailure = autoFailureDemerits.indexOf(demerit) !== -1;
+                var barColor = isAutoFailure ? 'var(--error)' : 'var(--primary)';
+                var maxCount = demeritCounts[sortedDemerits[0]];
+                var barWidth = (count / maxCount) * 100;
+
+                html += '<div style="margin: 10px 0; background: var(--surface-light); border-left: 4px solid ' + barColor + '; border-radius: 8px; padding: 12px;">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
+                html += '<span style="font-size: 13px; color: var(--text-primary); font-weight: 600;">' + (index + 1) + '. ' + demerit + '</span>';
+                html += '<span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">' + count + ' (' + percentage + '%)</span>';
+                html += '</div>';
+                html += '<div style="background: var(--surface); height: 6px; border-radius: 3px; overflow: hidden;">';
+                html += '<div style="background: ' + barColor + '; height: 100%; width: ' + barWidth + '%; border-radius: 3px; transition: width 0.5s ease;"></div>';
+                html += '</div>';
+                html += '</div>';
+            });
+            html += '</div>';
+
+            var regularCount = 0;
+            var autoFailureCount = 0;
+
+            Object.keys(demeritCounts).forEach(function (demerit) {
+                if (autoFailureDemerits.indexOf(demerit) !== -1) {
+                    autoFailureCount += demeritCounts[demerit];
+                } else {
+                    regularCount += demeritCounts[demerit];
+                }
+            });
+
+            html += '<div style="background: var(--surface); border: 2px solid var(--primary); border-radius: 12px; padding: 16px;">';
+            html += '<h5 style="color: var(--text-primary); margin: 0 0 12px 0; font-weight: 700;">⚖️ Violation Severity Breakdown</h5>';
+            html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">';
+
+            html += '<div style="text-align: center; padding: 16px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 12px;">';
+            html += '<div style="font-size: 32px; font-weight: 800; color: white; margin-bottom: 4px;">' + regularCount + '</div>';
+            html += '<div style="color: white; font-size: 12px; font-weight: 600; text-transform: uppercase;">Regular Violations</div>';
+            html += '<div style="font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 4px;">(' + ((regularCount / totalViolations) * 100).toFixed(1) + '%)</div>';
+            html += '</div>';
+
+            html += '<div style="text-align: center; padding: 16px; background: linear-gradient(135deg, var(--error), #dc2626); border-radius: 12px;">';
+            html += '<div style="font-size: 32px; font-weight: 800; color: white; margin-bottom: 4px;">' + autoFailureCount + '</div>';
+            html += '<div style="color: white; font-size: 12px; font-weight: 600; text-transform: uppercase;">Auto-Failure</div>';
+            html += '<div style="font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 4px;">(' + ((autoFailureCount / totalViolations) * 100).toFixed(1) + '%)</div>';
+            html += '</div>';
+
+            html += '</div>';
+            html += '<div style="margin-top: 12px; text-align: center; font-size: 12px; color: var(--text-muted);">';
+            html += 'Total Violations: <strong>' + totalViolations + '</strong> across ' + inspections.length + ' inspections';
+            html += '</div>';
+            html += '</div>';
+
+            document.getElementById('analytics-content').innerHTML = html;
+            document.getElementById('analytics-display').style.display = 'block';
+            logAdmin('✓ Demerit analysis generated (' + totalViolations + ' total violations)');
+        }
+
+        function generateTimelineReport() {
+            if (inspections.length === 0) {
+                logAdmin('No inspection data available for timeline analysis');
+                return;
+            }
+
+            logAdmin('Generating inspection timeline trends...');
+
+            var dateGroups = {};
+            var sortedInspections = inspections.slice().sort(function (a, b) {
+                return new Date(a.inspectionDate) - new Date(b.inspectionDate);
+            });
+
+            sortedInspections.forEach(function (inspection) {
+                var date = inspection.inspectionDate;
+                if (!dateGroups[date]) {
+                    dateGroups[date] = {
+                        total: 0,
+                        passed: 0,
+                        failed: 0,
+                        totalScore: 0,
+                        inspectors: new Set()
+                    };
+                }
+
+                var group = dateGroups[date];
+                group.total++;
+                group.totalScore += inspection.score;
+                group.inspectors.add(inspection.inspectorName || 'Unknown');
+
+                if (inspection.status === 'PASSED') {
+                    group.passed++;
+                } else {
+                    group.failed++;
+                }
+            });
+
+            var sortedDates = Object.keys(dateGroups).sort();
+
+            var html = '<h4 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text-primary);">📅 Inspection Timeline Analysis</h4>';
+            html += '<div style="margin-bottom: 20px; max-height: 300px; overflow-y: auto; padding-right: 8px;">';
+            html += '<h5 style="color: var(--text-secondary); margin-bottom: 12px; font-size: 14px; font-weight: 600;">📈 Daily Inspection Activity</h5>';
+
+            sortedDates.forEach(function (date) {
+                var group = dateGroups[date];
+                var failureRate = ((group.failed / group.total) * 100).toFixed(1);
+                var avgScore = (group.totalScore / group.total).toFixed(1);
+                var dateObj = new Date(date);
+                var displayDate = dateObj.toLocaleDateString();
+
+                var performanceColor = failureRate > 30 ? 'var(--error)' : failureRate > 15 ? 'var(--warning)' : 'var(--success)';
+
+                html += '<div style="background: var(--surface-light); border-left: 4px solid ' + performanceColor + '; padding: 12px; margin: 8px 0; border-radius: 0 8px 8px 0;">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
+                html += '<span style="font-weight: 700; color: var(--text-primary); font-size: 14px;">' + displayDate + '</span>';
+                html += '<span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">' + group.total + ' inspections</span>';
+                html += '</div>';
+                html += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 12px; color: var(--text-secondary);">';
+                html += '<div>Pass: <strong>' + group.passed + '</strong></div>';
+                html += '<div>Fail: <strong>' + group.failed + '</strong></div>';
+                html += '<div>Avg: <strong>' + avgScore + '</strong></div>';
+                html += '</div>';
+                html += '</div>';
+            });
+            html += '</div>';
+
+            var totalDays = sortedDates.length;
+            var totalInspections = inspections.length;
+            var avgPerDay = (totalInspections / totalDays).toFixed(1);
+            var earliestDate = new Date(sortedDates[0]).toLocaleDateString();
+            var latestDate = new Date(sortedDates[sortedDates.length - 1]).toLocaleDateString();
+
+            html += '<div style="background: var(--surface); border: 2px solid var(--primary); border-radius: 12px; padding: 16px;">';
+            html += '<h5 style="color: var(--text-primary); margin: 0 0 12px 0; font-weight: 700;">📊 Timeline Summary</h5>';
+            html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; color: var(--text-secondary);">';
+            html += '<div>Date Range: <strong>' + earliestDate + ' - ' + latestDate + '</strong></div>';
+            html += '<div>Active Days: <strong>' + totalDays + '</strong></div>';
+            html += '<div>Total Inspections: <strong>' + totalInspections + '</strong></div>';
+            html += '<div>Avg per Day: <strong>' + avgPerDay + '</strong></div>';
+            html += '</div>';
+            html += '</div>';
+
+            document.getElementById('analytics-content').innerHTML = html;
+            document.getElementById('analytics-display').style.display = 'block';
+            logAdmin('✓ Timeline analysis generated (' + totalDays + ' active days)');
+        }
+
+        function closeAnalytics() {
+            document.getElementById('analytics-display').style.display = 'none';
+        }
+
+        // Room Management Functions
+        function openRoomManagement() {
+            const modal = document.getElementById('room-management-modal');
+            const select = document.getElementById('room-edit-select');
+            
+            // Populate room select
+            select.innerHTML = '<option value="">Choose a room to edit</option>';
+            for (let i = 201; i <= 299; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Room ${i}`;
+                select.appendChild(option);
+            }
+            for (let i = 301; i <= 399; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Room ${i}`;
+                select.appendChild(option);
+            }
+            
+            modal.classList.add('show');
+        }
+
+        function closeRoomManagement() {
+            document.getElementById('room-management-modal').classList.remove('show');
+            document.getElementById('room-edit-form').style.display = 'none';
+            document.getElementById('room-edit-select').value = '';
+        }
+
+        var currentEditingRoom = null;
+        var selectedShift = null;
+        var selectedGender = null;
+
+        function loadRoomProperties() {
+            const roomNumber = document.getElementById('room-edit-select').value;
+            if (!roomNumber) {
+                document.getElementById('room-edit-form').style.display = 'none';
+                return;
+            }
+
+            currentEditingRoom = roomNumber;
+            const props = roomProperties[roomNumber] || {};
+            
+            selectedShift = props.shift || null;
+            selectedGender = props.gender || null;
+
+            // Update UI
+            document.querySelectorAll('.shift-btn').forEach(btn => {
+                btn.style.background = 'var(--surface-light)';
+                btn.style.borderColor = 'var(--border)';
+                btn.style.color = 'var(--text-primary)';
+            });
+
+            document.querySelectorAll('.gender-btn').forEach(btn => {
+                btn.style.background = 'var(--surface-light)';
+                btn.style.borderColor = 'var(--border)';
+                btn.style.color = 'var(--text-primary)';
+            });
+
+            if (selectedShift) {
+                const shiftBtn = document.querySelector(`.shift-btn[data-shift="${selectedShift}"]`);
+                if (shiftBtn) {
+                    shiftBtn.style.background = 'linear-gradient(135deg, var(--secondary), var(--primary))';
+                    shiftBtn.style.borderColor = 'transparent';
+                    shiftBtn.style.color = 'white';
+                }
+            }
+
+            if (selectedGender) {
+                const genderBtn = document.querySelector(`.gender-btn[data-gender="${selectedGender}"]`);
+                if (genderBtn) {
+                    genderBtn.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
+                    genderBtn.style.borderColor = 'transparent';
+                    genderBtn.style.color = 'white';
+                }
+            }
+
+            document.getElementById('room-edit-form').style.display = 'block';
+        }
+
+        function selectShift(shift) {
+            selectedShift = shift;
+            
+            document.querySelectorAll('.shift-btn').forEach(btn => {
+                btn.style.background = 'var(--surface-light)';
+                btn.style.borderColor = 'var(--border)';
+                btn.style.color = 'var(--text-primary)';
+            });
+
+            const shiftBtn = document.querySelector(`.shift-btn[data-shift="${shift}"]`);
+            if (shiftBtn) {
+                shiftBtn.style.background = 'linear-gradient(135deg, var(--secondary), var(--primary))';
+                shiftBtn.style.borderColor = 'transparent';
+                shiftBtn.style.color = 'white';
+            }
+        }
+
+        function selectGender(gender) {
+            selectedGender = gender;
+            
+            document.querySelectorAll('.gender-btn').forEach(btn => {
+                btn.style.background = 'var(--surface-light)';
+                btn.style.borderColor = 'var(--border)';
+                btn.style.color = 'var(--text-primary)';
+            });
+
+            const genderBtn = document.querySelector(`.gender-btn[data-gender="${gender}"]`);
+            if (genderBtn) {
+                genderBtn.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
+                genderBtn.style.borderColor = 'transparent';
+                genderBtn.style.color = 'white';
+            }
+        }
+
+        async function saveRoomProperties() {
+            if (!currentEditingRoom) return;
+
+            if (!selectedShift || !selectedGender) {
+                alert('Please select both Shift and Gender');
+                return;
+            }
+
+            roomProperties[currentEditingRoom] = {
+                shift: selectedShift,
+                gender: selectedGender
+            };
+
+            await saveData();
+            
+            // Refresh room tiles to show updated properties
+            setupRoomTiles();
+            updateAdminStats();
+            
+            alert(`Room ${currentEditingRoom} properties saved!`);
+            closeRoomManagement();
+        }
+
+        function bulkSetRoomProperties() {
+            const roomRange = prompt('Enter room range (e.g., "201-210" or "301-320"):');
+            if (!roomRange) return;
+
+            const match = roomRange.match(/(\d+)-(\d+)/);
+            if (!match) {
+                alert('Invalid format. Use format like "201-210"');
+                return;
+            }
+
+            const start = parseInt(match[1]);
+            const end = parseInt(match[2]);
+
+            if (start > end || start < 201 || end > 399) {
+                alert('Invalid room range');
+                return;
+            }
+
+            const shift = prompt('Enter Shift (S, T, or R):');
+            if (!shift || !['S', 'T', 'R'].includes(shift.toUpperCase())) {
+                alert('Invalid shift. Must be S, T, or R');
+                return;
+            }
+
+            const gender = prompt('Enter Gender (Male or Female):');
+            if (!gender || !['Male', 'Female'].includes(gender)) {
+                alert('Invalid gender. Must be Male or Female');
+                return;
+            }
+
+            let count = 0;
+            for (let i = start; i <= end; i++) {
+                roomProperties[i.toString()] = {
+                    shift: shift.toUpperCase(),
+                    gender: gender
+                };
+                count++;
+            }
+
+            saveData();
+            setupRoomTiles();
+            updateAdminStats();
+            
+            logAdmin(`✓ Set properties for ${count} rooms (${roomRange})`);
+            alert(`Properties set for ${count} rooms!`);
+        }
+
+        function clearLocalStorage() {
+            localStorage.removeItem('dormInspections');
+            localStorage.removeItem('weeklySchedule');
+            localStorage.removeItem('inspectorName');
+            logAdmin('✓ Local storage cleared');
+        }
+
+        async function testFirebaseConnection() {
+            logAdmin('Testing Firebase...');
+            try {
+                if (db) {
+                    await db.collection('dormData').doc('test').set({ test: true });
+                    await db.collection('dormData').doc('test').delete();
+                    logAdmin('✓ Firebase connection OK');
+                } else {
+                    logAdmin('✗ Firebase not initialized');
+                }
+            } catch (error) {
+                logAdmin('✗ Firebase test failed: ' + error.message);
+            }
+        }
+
+        function generateTestData() {
+            const testRooms = ['201', '202', '203', '301', '302'];
+            for (let i = 0; i < 5; i++) {
+                inspections.push({
+                    id: Date.now() + i,
+                    roomNumber: testRooms[i],
+                    inspectionDate: new Date().toISOString().split('T')[0],
+                    inspectorName: inspectorNames[Math.floor(Math.random() * inspectorNames.length)],
+                    demerits: Math.random() > 0.5 ? [demerits[0]] : [],
+                    autoFailureDemerits: [],
+                    regularScore: Math.random() > 0.5 ? 1 : 0,
+                    autoFailureScore: 0,
+                    score: Math.random() > 0.5 ? 1 : 0,
+                    status: Math.random() > 0.7 ? 'FAILED' : 'PASSED',
+                    notes: 'Test data',
+                    timestamp: new Date().toISOString()
+                });
+            }
+            saveData();
+            setupForm();
+            updateAdminStats();
+            logAdmin('✓ Test data generated');
+        }
+
+        // Initialize
+        window.onload = async function() {
+            loadSettings();
+            await loadData();
+            setupForm();
+            setupAdminPanel();
+        };
+
+        // Close modal on backdrop click
+        document.getElementById('settings-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeSettings();
+        });
+
+        document.getElementById('room-management-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeRoomManagement();
+        });
+
+        // Real-time Firebase sync listeners
+        if (db) {
+            db.collection('dormData').doc('inspections').onSnapshot(function (doc) {
+                if (doc.exists && !isLoading) {
+                    const data = doc.data();
+                    const newInspections = data.inspections || [];
+
+                    if (JSON.stringify(newInspections) !== JSON.stringify(inspections)) {
+                        console.log('Inspections updated from server');
+                        inspections = newInspections;
+
+                        const activeSection = document.querySelector('.section.active');
+                        if (activeSection && activeSection.id === 'view-section') {
+                            loadInspectionsList();
+                        } else if (activeSection && activeSection.id === 'reports-section') {
+                            generateReport();
+                        }
+                    }
+                }
+            }, function (error) {
+                console.error('Error listening to inspections changes:', error);
+            });
+
+            db.collection('dormData').doc('schedule').onSnapshot(function (doc) {
+                if (doc.exists && !isLoading) {
+                    const data = doc.data();
+                    const newScheduledRooms = data.scheduledRooms || [];
+
+                    if (JSON.stringify(newScheduledRooms) !== JSON.stringify(scheduledRooms)) {
+                        console.log('Schedule updated from server');
+                        scheduledRooms = newScheduledRooms;
+
+                        var activeSection = document.querySelector('.section.active');
+                        var isOnFormWithRoomSelection = activeSection && (
+                            activeSection.id === 'new-section' ||
+                            activeSection.id === 'schedule-section'
+                        );
+
+                        if (isOnFormWithRoomSelection) {
+                            updateScheduledRoomsDisplay();
+                            updateRoomDropdown(true);
+                        } else {
+                            updateScheduledRoomsDisplay();
+                            updateRoomDropdown(false);
+                        }
+                    }
+                }
+            }, function (error) {
+                console.error('Error listening to schedule changes:', error);
+            });
+
+            db.collection('dormData').doc('inspectors').onSnapshot(function (doc) {
+                if (doc.exists && !isLoading) {
+                    const data = doc.data();
+                    const newInspectorNames = data.inspectorNames || ['Hoskins', 'Troope', 'Smith', 'Cherry', 'Avila', 'Young', 'Grier'];
+
+                    if (JSON.stringify(newInspectorNames) !== JSON.stringify(inspectorNames)) {
+                        console.log('Inspector names updated from server');
+                        inspectorNames = newInspectorNames;
+                        updateInspectorDropdown();
+                        updateAdminStats();
+                    }
+                }
+            }, function (error) {
+                console.error('Error listening to inspector changes:', error);
+            });
+
+            db.collection('dormData').doc('roomProperties').onSnapshot(function (doc) {
+                if (doc.exists && !isLoading) {
+                    const data = doc.data();
+                    const newRoomProperties = data.roomProperties || {};
+
+                    if (JSON.stringify(newRoomProperties) !== JSON.stringify(roomProperties)) {
+                        console.log('Room properties updated from server');
+                        roomProperties = newRoomProperties;
+                        setupRoomTiles();
+                    }
+                }
+            }, function (error) {
+                console.error('Error listening to room properties changes:', error);
+            });
+        }
+    </script>
+</body>
+</html>
